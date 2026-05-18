@@ -50,16 +50,240 @@
 </head>
 <body>
 
-  <h1>Título da página</h1>
+  <h1>Vahzanatta</h1>
 
-  <h2>Seção 1</h2>
+  <h2>ModuloPendencias — VBA</h2>
 
-  <p>Texto de exemplo. Substitua pelo conteúdo real.</p>
+  <pre><code>Attribute VB_Name = "ModuloPendencias"
+Option Explicit
 
-  <pre><code>// bloco de código de exemplo
-function hello() {
-  return "mundo";
-}</code></pre>
+' =============================================================================
+'  MODOS DE CORRESPONDÊNCIA (coluna D do De-Para)
+'  ─────────────────────────────────────────────
+'  CONTEM   (padrão) — texto do SAP contém o trecho configurado
+'                      ex: "SISPAG" → bate em "XPTO SISPAG 999"
+'
+'  INICIA   — texto do SAP começa com o trecho configurado
+'                      ex: "PIX TRANSF" → bate em "PIX TRANSF JOEL MA03/02"
+'                          mas NÃO bate em "ESTORNO PIX TRANSF"
+'
+'  EXATO    — texto do SAP é idêntico ao trecho configurado
+'                      ex: "SISPAG" → bate APENAS em "SISPAG" (sem nada mais)
+'
+'  REGEX    — correspondência por expressão regular (via VBScript.RegExp)
+'                      ex: "TED-TRANSF ELET DISPON \d{7}" → bate no padrão TED
+'
+'  Todas as comparações são case-insensitive.
+' =============================================================================
+
+' =============================================================================
+'  FUNÇÃO AUXILIAR - Verifica correspondência conforme o modo
+' =============================================================================
+Function TextoBate(textoSAP As String, textoRegra As String, modo As String) As Boolean
+    Dim modoUpper As String
+    modoUpper = UCase(Trim(modo))
+    If modoUpper = "" Then modoUpper = "CONTEM"
+
+    Select Case modoUpper
+
+        Case "CONTEM"
+            TextoBate = (InStr(1, textoSAP, textoRegra, vbTextCompare) &gt; 0)
+
+        Case "INICIA"
+            TextoBate = (StrComp(Left(textoSAP, Len(textoRegra)), textoRegra, vbTextCompare) = 0)
+
+        Case "EXATO"
+            TextoBate = (StrComp(textoSAP, textoRegra, vbTextCompare) = 0)
+
+        Case "REGEX"
+            Dim re As Object
+            Set re = CreateObject("VBScript.RegExp")
+            re.IgnoreCase = True
+            re.Global     = False
+            re.Pattern    = textoRegra
+            TextoBate = re.Test(textoSAP)
+            Set re = Nothing
+
+        Case Else
+            TextoBate = (InStr(1, textoSAP, textoRegra, vbTextCompare) &gt; 0)
+
+    End Select
+End Function
+
+' =============================================================================
+'  MACRO PRINCIPAL - Preencher Área Responsável
+' =============================================================================
+Sub PreencherAreaResponsavel()
+    Dim wsSAP         As Worksheet
+    Dim wsDepara      As Worksheet
+    Dim lastRowSAP    As Long
+    Dim lastRowDepara As Long
+    Dim i As Long, j As Long
+    Dim contaRazao  As String
+    Dim texto       As String
+    Dim contaDepara As String
+    Dim textoDepara As String
+    Dim modoDepara  As String
+    Dim areaDepara  As String
+    Dim matched     As Boolean
+    Dim totalAtrib  As Long
+    Dim totalNaoId  As Long
+
+    On Error GoTo ErrHandler
+    Set wsSAP    = ThisWorkbook.Worksheets("Dados SAP")
+    Set wsDepara = ThisWorkbook.Worksheets("De-Para")
+
+    lastRowSAP    = wsSAP.Cells(wsSAP.Rows.Count, "B").End(xlUp).Row
+    lastRowDepara = wsDepara.Cells(wsDepara.Rows.Count, "A").End(xlUp).Row
+
+    If lastRowSAP &lt; 3 Then
+        MsgBox "Nenhum dado encontrado na aba 'Dados SAP' (a partir da linha 3).", _
+               vbExclamation, "Sem dados"
+        Exit Sub
+    End If
+
+    If lastRowDepara &lt; 3 Then
+        MsgBox "Nenhuma regra encontrada na aba 'De-Para' (a partir da linha 3).", _
+               vbExclamation, "De-Para vazio"
+        Exit Sub
+    End If
+
+    Application.ScreenUpdating = False
+    Application.Calculation    = xlCalculationManual
+
+    totalAtrib = 0
+    totalNaoId = 0
+
+    For i = 3 To lastRowSAP
+        contaRazao = Trim(CStr(wsSAP.Cells(i, 2).Value))    ' Col B = Conta do Razão
+        texto      = Trim(CStr(wsSAP.Cells(i, 11).Value))   ' Col K = Texto
+
+        matched    = False
+        areaDepara = ""
+
+        For j = 3 To lastRowDepara
+            contaDepara = Trim(CStr(wsDepara.Cells(j, 1).Value))  ' Col A = Conta do Razão
+            textoDepara = Trim(CStr(wsDepara.Cells(j, 2).Value))  ' Col B = Texto (regra)
+            areaDepara  = Trim(CStr(wsDepara.Cells(j, 3).Value))  ' Col C = Área Responsável
+            modoDepara  = Trim(CStr(wsDepara.Cells(j, 4).Value))  ' Col D = Modo
+
+            If contaDepara = "" Or areaDepara = "" Then GoTo ProximaRegra
+            If contaRazao &lt;&gt; contaDepara Then GoTo ProximaRegra
+
+            If textoDepara = "" Then
+                matched = True
+                Exit For
+            End If
+
+            If TextoBate(texto, textoDepara, modoDepara) Then
+                matched = True
+                Exit For
+            End If
+
+ProximaRegra:
+        Next j
+
+        If matched Then
+            With wsSAP.Cells(i, 17)
+                .Value          = areaDepara
+                .Interior.Color = RGB(226, 239, 218)
+                .Font.Color     = RGB(55, 86, 35)
+            End With
+            totalAtrib = totalAtrib + 1
+        Else
+            With wsSAP.Cells(i, 17)
+                .Value          = "⚠ Não identificado"
+                .Interior.Color = RGB(255, 235, 156)
+                .Font.Color     = RGB(156, 87, 0)
+            End With
+            totalNaoId = totalNaoId + 1
+        End If
+    Next i
+
+    Application.ScreenUpdating = True
+    Application.Calculation    = xlCalculationAutomatic
+
+    MsgBox "Concluído!" &amp; vbCrLf &amp; vbCrLf &amp; _
+           "✔ Atribuídos:        " &amp; totalAtrib &amp; " linha(s)" &amp; vbCrLf &amp; _
+           "⚠ Não identificados: " &amp; totalNaoId &amp; " linha(s)" &amp; vbCrLf &amp; vbCrLf &amp; _
+           "Verifique as linhas amarelas e adicione regras" &amp; vbCrLf &amp; _
+           "na aba 'De-Para' se necessário.", _
+           vbInformation, "Preenchimento Concluído"
+    Exit Sub
+
+ErrHandler:
+    Application.ScreenUpdating = True
+    Application.Calculation    = xlCalculationAutomatic
+    MsgBox "Erro " &amp; Err.Number &amp; ": " &amp; Err.Description, vbCritical, "Erro na Macro"
+End Sub
+
+' =============================================================================
+'  MACRO AUXILIAR - Limpar coluna Área Responsável
+' =============================================================================
+Sub LimparAreaResponsavel()
+    Dim ws      As Worksheet
+    Dim lastRow As Long
+    Dim resp    As VbMsgBoxResult
+
+    resp = MsgBox("Isso vai apagar todos os valores da coluna 'Área Responsável'." &amp; _
+                  vbCrLf &amp; "Deseja continuar?", vbYesNo + vbQuestion, "Confirmar Limpeza")
+    If resp = vbNo Then Exit Sub
+
+    Set ws  = ThisWorkbook.Worksheets("Dados SAP")
+    lastRow = ws.Cells(ws.Rows.Count, "B").End(xlUp).Row
+    If lastRow &lt; 3 Then Exit Sub
+
+    Dim rng As Range
+    Set rng = ws.Range("Q3:Q" &amp; lastRow)
+    rng.ClearContents
+    rng.Interior.Color  = RGB(226, 239, 218)
+    rng.Font.ColorIndex = xlAutomatic
+
+    MsgBox "Coluna 'Área Responsável' limpa com sucesso.", vbInformation, "Limpeza Concluída"
+End Sub
+
+' =============================================================================
+'  MACRO AUXILIAR - Exportar linhas não identificadas para aba separada
+' =============================================================================
+Sub ExportarNaoIdentificados()
+    Dim wsSAP   As Worksheet
+    Dim wsExp   As Worksheet
+    Dim lastRow As Long
+    Dim i As Long, destRow As Long
+
+    Set wsSAP = ThisWorkbook.Worksheets("Dados SAP")
+    lastRow   = wsSAP.Cells(wsSAP.Rows.Count, "B").End(xlUp).Row
+
+    On Error Resume Next
+    Set wsExp = ThisWorkbook.Worksheets("Não Identificados")
+    On Error GoTo 0
+
+    If wsExp Is Nothing Then
+        Set wsExp = ThisWorkbook.Worksheets.Add( _
+                    After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
+        wsExp.Name = "Não Identificados"
+    Else
+        wsExp.Cells.Clear
+    End If
+
+    wsSAP.Rows(2).Copy Destination:=wsExp.Rows(1)
+    destRow = 2
+
+    For i = 3 To lastRow
+        If InStr(1, CStr(wsSAP.Cells(i, 17).Value), "Não identificado", vbTextCompare) &gt; 0 Then
+            wsSAP.Rows(i).Copy Destination:=wsExp.Rows(destRow)
+            destRow = destRow + 1
+        End If
+    Next i
+
+    If destRow = 2 Then
+        MsgBox "Nenhuma linha 'Não identificado' encontrada!", vbInformation, "Exportação"
+    Else
+        MsgBox "Exportadas " &amp; (destRow - 2) &amp; " linha(s) para a aba 'Não Identificados'.", _
+               vbInformation, "Exportação Concluída"
+        wsExp.Activate
+    End If
+End Sub</code></pre>
 
 </body>
 </html>
