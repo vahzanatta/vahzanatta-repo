@@ -63,12 +63,12 @@ Sub LimparResultados()
     On Error GoTo ErrHandler
     Set ws = ThisWorkbook.Worksheets("SAP")
 
-    lastRow = ws.Cells(ws.Rows.Count, "B").End(xlUp).Row
+    lastRow = ws.Cells(ws.Rows.Count, "C").End(xlUp).Row
     If lastRow < 1 Then Exit Sub
 
-    ws.Range("K1:M" & lastRow).ClearContents
+    ws.Range("L1:N" & lastRow).ClearContents
 
-    MsgBox "Colunas K:M limpas com sucesso.", vbInformation, "Limpeza Concluída"
+    MsgBox "Colunas L:N limpas com sucesso.", vbInformation, "Limpeza Concluída"
     Exit Sub
 
 ErrHandler:
@@ -97,7 +97,7 @@ Sub ProcessarPendencias()
         Exit Sub
     End If
 
-    lastRowSAP  = wsSAP.Cells(wsSAP.Rows.Count, "B").End(xlUp).Row
+    lastRowSAP  = wsSAP.Cells(wsSAP.Rows.Count, "C").End(xlUp).Row
     lastRowBase = wsBase.Cells(wsBase.Rows.Count, "A").End(xlUp).Row
 
     If lastRowSAP < 2 Then
@@ -114,13 +114,13 @@ Sub ProcessarPendencias()
 
     ' --- Etapa 2: Exclusão de linhas inválidas (de baixo para cima) ---
     For i = lastRowSAP To 2 Step -1
-        If Trim(CStr(wsSAP.Cells(i, 6).Value)) = "" Then
+        If Trim(CStr(wsSAP.Cells(i, 7).Value)) = "" Then
             wsSAP.Rows(i).Delete
         End If
     Next i
 
     ' Recalcular após exclusões
-    lastRowSAP = wsSAP.Cells(wsSAP.Rows.Count, "B").End(xlUp).Row
+    lastRowSAP = wsSAP.Cells(wsSAP.Rows.Count, "C").End(xlUp).Row
     If lastRowSAP < 2 Then
         Application.ScreenUpdating = True
         Application.Calculation    = xlCalculationAutomatic
@@ -131,7 +131,7 @@ Sub ProcessarPendencias()
     ' --- Etapa 3: Carregamento em arrays ---
     Dim arrSAP()  As Variant
     Dim arrBase() As Variant
-    arrSAP  = wsSAP.Range("A2:J" & lastRowSAP).Value   ' (1 To n, 1 To 10)
+    arrSAP  = wsSAP.Range("A2:K" & lastRowSAP).Value   ' (1 To n, 1 To 11)
     arrBase = wsBase.Range("A2:E" & lastRowBase).Value  ' (1 To m, 1 To 5)
 
     ' --- Etapa 4: Processamento ---
@@ -161,9 +161,9 @@ Sub ProcessarPendencias()
     ReDim arrOut(1 To totalRows, 1 To 3)
 
     For i = 1 To totalRows
-        contaSAP = Trim(CStr(arrSAP(i, 2)))   ' col B — Conta do Razão
-        textoSAP = Trim(CStr(arrSAP(i, 10)))  ' col J — Texto
-        dataLanc = arrSAP(i, 4)               ' col D — Data de lançamento
+        contaSAP = Trim(CStr(arrSAP(i, 3)))   ' col C — Conta do Razão
+        textoSAP = Trim(CStr(arrSAP(i, 11)))  ' col K — Texto
+        dataLanc = arrSAP(i, 5)               ' col E — Data de lançamento
 
         ' Dias em Aberto
         If IsDate(dataLanc) And CStr(dataLanc) <> "" Then
@@ -211,15 +211,15 @@ ProximaRegra:
     Next i
 
     ' Cabeçalhos das colunas de saída
-    wsSAP.Cells(1, 11).Value = "Data Base"
-    wsSAP.Cells(1, 12).Value = "Dias em Aberto"
-    wsSAP.Cells(1, 13).Value = "Área Responsável"
+    wsSAP.Cells(1, 12).Value = "Data Base"
+    wsSAP.Cells(1, 13).Value = "Dias em Aberto"
+    wsSAP.Cells(1, 14).Value = "Área Responsável"
 
     ' Escrita em lote
-    wsSAP.Range("K2:M" & lastRowSAP).Value = arrOut
+    wsSAP.Range("L2:N" & lastRowSAP).Value = arrOut
 
     ' Formata Data Base como data curta
-    wsSAP.Range("K2:K" & lastRowSAP).NumberFormat = "dd/mm/yyyy"
+    wsSAP.Range("L2:L" & lastRowSAP).NumberFormat = "dd/mm/yyyy"
 
     Application.ScreenUpdating = True
     Application.Calculation    = xlCalculationAutomatic
