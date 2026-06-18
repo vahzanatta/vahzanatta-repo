@@ -1,16 +1,16 @@
 Attribute VB_Name = "ModuloPendencias"
 Option Explicit
 
-' Returns 0 if rule is eliminated by any mismatch, or 1-3 for the number of fields matched.
-' Scoring: +1 for conta match (or blank conta), +1 for começa em match, +1 for contém match.
-' A non-blank field that does not match immediately eliminates the rule (returns 0).
+' Retorna 0 se a regra for eliminada por incompatibilidade, ou 1–4 conforme os campos correspondidos.
+' Pontuação: +1 conta (ou em branco), +1 começa em, +1 contém, +1 regex.
+' Um campo não-vazio que não corresponde elimina a regra imediatamente (retorna 0).
 Function CalcularScore(contaSAP As String, textoSAP As String, _
                        contaBase As String, comecaEm As String, _
-                       contem As String) As Integer
+                       contem As String, regexStr As String) As Integer
     Dim score As Integer
     score = 0
 
-    ' Conta do Razão: blank = wildcard (matches any); non-blank must match exactly
+    ' Conta do Razão: em branco = coringa (qualquer conta); não-vazio deve corresponder exatamente
     If contaBase <> "" Then
         If StrComp(contaSAP, contaBase, vbTextCompare) <> 0 Then
             CalcularScore = 0
@@ -19,7 +19,7 @@ Function CalcularScore(contaSAP As String, textoSAP As String, _
     End If
     score = score + 1
 
-    ' Começa em: only evaluated when non-blank
+    ' Começa em: avaliado apenas quando não-vazio
     If comecaEm <> "" Then
         If StrComp(Left(textoSAP, Len(comecaEm)), comecaEm, vbTextCompare) <> 0 Then
             CalcularScore = 0
@@ -28,12 +28,28 @@ Function CalcularScore(contaSAP As String, textoSAP As String, _
         score = score + 1
     End If
 
-    ' Contém: only evaluated when non-blank
+    ' Contém: avaliado apenas quando não-vazio
     If contem <> "" Then
         If InStr(1, textoSAP, contem, vbTextCompare) = 0 Then
             CalcularScore = 0
             Exit Function
         End If
+        score = score + 1
+    End If
+
+    ' Regex: avaliado apenas quando não-vazio (usa VBScript.RegExp, case-insensitive)
+    If regexStr <> "" Then
+        Dim re As Object
+        Set re = CreateObject("VBScript.RegExp")
+        re.IgnoreCase = True
+        re.Global     = False
+        re.Pattern    = regexStr
+        If Not re.Test(textoSAP) Then
+            CalcularScore = 0
+            Set re = Nothing
+            Exit Function
+        End If
+        Set re = Nothing
         score = score + 1
     End If
 
@@ -103,7 +119,7 @@ Sub ProcessarPendencias()
         End If
     Next i
 
-    ' Recalculate after deletions
+    ' Recalcular após exclusões
     lastRowSAP = wsSAP.Cells(wsSAP.Rows.Count, "B").End(xlUp).Row
     If lastRowSAP < 2 Then
         Application.ScreenUpdating = True
@@ -116,7 +132,7 @@ Sub ProcessarPendencias()
     Dim arrSAP()  As Variant
     Dim arrBase() As Variant
     arrSAP  = wsSAP.Range("A2:J" & lastRowSAP).Value   ' (1 To n, 1 To 10)
-    arrBase = wsBase.Range("A2:D" & lastRowBase).Value  ' (1 To m, 1 To 4)
+    arrBase = wsBase.Range("A2:E" & lastRowBase).Value  ' (1 To m, 1 To 5)
 
     ' --- Etapa 4: Processamento ---
     Dim totalRows  As Long
@@ -130,13 +146,14 @@ Sub ProcessarPendencias()
     Dim contaBase  As String
     Dim comecaEm   As String
     Dim contem     As String
+    Dim regexStr   As String
     Dim areaBase   As String
     Dim bestScore  As Integer
     Dim bestArea   As String
     Dim scoreAtual As Integer
 
     dataBase   = Date
-    totalRows  = lastRowSAP - 1   ' rows 2..lastRowSAP → array indices 1..totalRows
+    totalRows  = lastRowSAP - 1
     totalAtrib = 0
     totalNaoId = 0
 
@@ -155,22 +172,23 @@ Sub ProcessarPendencias()
             diasAberto = "—"
         End If
 
-        ' Find best matching rule in BASE
+        ' Busca a regra com maior pontuação na BASE
         bestScore = 0
         bestArea  = ""
 
         For j = 1 To lastRowBase - 1
-            contaBase = Trim(CStr(arrBase(j, 1)))  ' col A
-            comecaEm  = Trim(CStr(arrBase(j, 2)))  ' col B
-            contem    = Trim(CStr(arrBase(j, 3)))  ' col C
-            areaBase  = Trim(CStr(arrBase(j, 4)))  ' col D
+            contaBase = Trim(CStr(arrBase(j, 1)))  ' col A — Conta do Razão
+            comecaEm  = Trim(CStr(arrBase(j, 2)))  ' col B — Começa em
+            contem    = Trim(CStr(arrBase(j, 3)))  ' col C — Contém
+            regexStr  = Trim(CStr(arrBase(j, 4)))  ' col D — Regex
+            areaBase  = Trim(CStr(arrBase(j, 5)))  ' col E — Área Responsável
 
-            ' Skip rules with no Área Responsável defined
+            ' Ignora regras sem Área Responsável definida
             If areaBase = "" Then GoTo ProximaRegra
 
-            scoreAtual = CalcularScore(contaSAP, textoSAP, contaBase, comecaEm, contem)
+            scoreAtual = CalcularScore(contaSAP, textoSAP, contaBase, comecaEm, contem, regexStr)
 
-            ' Strict greater-than preserves first-match-wins on tie
+            ' Maior score vence; empate mantém a primeira regra na ordem
             If scoreAtual > bestScore Then
                 bestScore = scoreAtual
                 bestArea  = areaBase
@@ -179,7 +197,7 @@ Sub ProcessarPendencias()
 ProximaRegra:
         Next j
 
-        ' Fill output row
+        ' Preenche array de saída
         arrOut(i, 1) = dataBase
         arrOut(i, 2) = diasAberto
 
@@ -192,25 +210,25 @@ ProximaRegra:
         End If
     Next i
 
-    ' Write headers
+    ' Cabeçalhos das colunas de saída
     wsSAP.Cells(1, 11).Value = "Data Base"
     wsSAP.Cells(1, 12).Value = "Dias em Aberto"
-    wsSAP.Cells(1, 13).Value = Chr(193) & "rea Respons" & Chr(225) & "vel"
+    wsSAP.Cells(1, 13).Value = "Área Responsável"
 
-    ' Batch write output
+    ' Escrita em lote
     wsSAP.Range("K2:M" & lastRowSAP).Value = arrOut
 
-    ' Format Data Base column as short date
+    ' Formata Data Base como data curta
     wsSAP.Range("K2:K" & lastRowSAP).NumberFormat = "dd/mm/yyyy"
 
     Application.ScreenUpdating = True
     Application.Calculation    = xlCalculationAutomatic
 
-    MsgBox "Conclu" & Chr(237) & "do!" & vbCrLf & vbCrLf & _
+    MsgBox "Concluído!" & vbCrLf & vbCrLf & _
            "Linhas analisadas:   " & totalRows & vbCrLf & _
-           "Atribu" & Chr(237) & "dos:          " & totalAtrib & vbCrLf & _
-           "N" & Chr(227) & "o identificados: " & totalNaoId, _
-           vbInformation, "Processamento Conclu" & Chr(237) & "do"
+           "Atribuídos:          " & totalAtrib & vbCrLf & _
+           "Não identificados:   " & totalNaoId, _
+           vbInformation, "Processamento Concluído"
     Exit Sub
 
 ErrHandler:
