@@ -39,3 +39,22 @@ Function CalcularScore(contaSAP As String, textoSAP As String, _
 
     CalcularScore = score
 End Function
+
+Sub LimparResultados()
+    Dim ws      As Worksheet
+    Dim lastRow As Long
+
+    On Error GoTo ErrHandler
+    Set ws = ThisWorkbook.Worksheets("SAP")
+
+    lastRow = ws.Cells(ws.Rows.Count, "B").End(xlUp).Row
+    If lastRow < 1 Then Exit Sub
+
+    ws.Range("K1:M" & lastRow).ClearContents
+
+    MsgBox "Colunas K:M limpas com sucesso.", vbInformation, "Limpeza Concluída"
+    Exit Sub
+
+ErrHandler:
+    MsgBox "Erro " & Err.Number & ": " & Err.Description, vbCritical, "Erro"
+End Sub
