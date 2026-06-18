@@ -58,3 +58,58 @@ Sub LimparResultados()
 ErrHandler:
     MsgBox "Erro " & Err.Number & ": " & Err.Description, vbCritical, "Erro"
 End Sub
+
+Sub ProcessarPendencias()
+    Dim wsSAP       As Worksheet
+    Dim wsBase      As Worksheet
+    Dim lastRowSAP  As Long
+    Dim lastRowBase As Long
+    Dim i           As Long
+
+    ' --- Etapa 1: Validação ---
+    On Error Resume Next
+    Set wsSAP  = ThisWorkbook.Worksheets("SAP")
+    Set wsBase = ThisWorkbook.Worksheets("BASE")
+    On Error GoTo ErrHandler
+
+    If wsSAP Is Nothing Then
+        MsgBox "Aba 'SAP' não encontrada.", vbCritical, "Erro"
+        Exit Sub
+    End If
+    If wsBase Is Nothing Then
+        MsgBox "Aba 'BASE' não encontrada.", vbCritical, "Erro"
+        Exit Sub
+    End If
+
+    lastRowSAP  = wsSAP.Cells(wsSAP.Rows.Count, "B").End(xlUp).Row
+    lastRowBase = wsBase.Cells(wsBase.Rows.Count, "A").End(xlUp).Row
+
+    If lastRowSAP < 2 Then
+        MsgBox "Nenhum dado encontrado na aba 'SAP' (a partir da linha 2).", vbExclamation, "Sem dados"
+        Exit Sub
+    End If
+    If lastRowBase < 2 Then
+        MsgBox "Nenhuma regra encontrada na aba 'BASE' (a partir da linha 2).", vbExclamation, "BASE vazia"
+        Exit Sub
+    End If
+
+    Application.ScreenUpdating = False
+    Application.Calculation    = xlCalculationManual
+
+    ' --- Etapa 2: Exclusão de linhas inválidas (de baixo para cima) ---
+    For i = lastRowSAP To 2 Step -1
+        If Trim(CStr(wsSAP.Cells(i, 6).Value)) = "" Then
+            wsSAP.Rows(i).Delete
+        End If
+    Next i
+
+    ' [Etapas 3 e 4 serão adicionadas na próxima tarefa]
+    Application.ScreenUpdating = True
+    Application.Calculation    = xlCalculationAutomatic
+    Exit Sub
+
+ErrHandler:
+    Application.ScreenUpdating = True
+    Application.Calculation    = xlCalculationAutomatic
+    MsgBox "Erro " & Err.Number & ": " & Err.Description, vbCritical, "Erro"
+End Sub
