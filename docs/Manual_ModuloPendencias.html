@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual de Uso — ModuloPendencias</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #222;
+      background: #fff;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 48px 60px;
+    }
+
+    /* ── Capa ── */
+    .capa {
+      text-align: center;
+      padding: 60px 0 40px;
+      border-bottom: 2px solid #1F3864;
+      margin-bottom: 40px;
+    }
+    .capa h1 {
+      font-size: 28px;
+      color: #1F3864;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .capa .subtitulo {
+      font-size: 15px;
+      color: #555;
+      margin-top: 6px;
+    }
+    .capa .intro {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #444;
+      text-align: justify;
+      max-width: 640px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+
+    /* ── Seções ── */
+    h2 {
+      font-size: 17px;
+      color: #1F3864;
+      font-weight: 700;
+      margin-top: 40px;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1.5px solid #C5D3E8;
+    }
+    h3 {
+      font-size: 13px;
+      color: #2E5FA3;
+      font-weight: 600;
+      margin-top: 22px;
+      margin-bottom: 6px;
+    }
+
+    p { margin-bottom: 10px; text-align: justify; }
+
+    /* ── Listas ── */
+    ul { margin: 6px 0 10px 20px; }
+    ul li { margin-bottom: 4px; }
+    ol { margin: 6px 0 10px 20px; }
+    ol li { margin-bottom: 4px; }
+
+    /* ── Tabelas ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      margin: 12px 0 18px;
+    }
+    thead tr {
+      background: #1F3864;
+      color: #fff;
+    }
+    thead th {
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+    }
+    tbody tr:nth-child(odd)  { background: #fff; }
+    tbody tr:nth-child(even) { background: #EBF0F8; }
+    tbody td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #D8DFE9;
+      vertical-align: top;
+    }
+    tbody td:first-child { white-space: nowrap; font-weight: 600; color: #1F3864; }
+
+    /* ── Destaques ── */
+    .nota {
+      background: #F4F6FB;
+      border-left: 3px solid #2E5FA3;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      color: #444;
+      margin: 10px 0;
+      border-radius: 0 4px 4px 0;
+    }
+    .aviso {
+      background: #FFF3CD;
+      border-left: 3px solid #E8A000;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      color: #7B3F00;
+      margin: 10px 0;
+      border-radius: 0 4px 4px 0;
+    }
+    code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      background: #F4F4F4;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    /* ── Passo a passo numerado ── */
+    .steps { margin: 8px 0 14px; }
+    .steps li {
+      padding: 5px 8px;
+      margin-bottom: 4px;
+      border-radius: 4px;
+    }
+    .steps li:nth-child(odd)  { background: #fff; }
+    .steps li:nth-child(even) { background: #F0F4FA; }
+
+    /* ── Tag de score ── */
+    .score-win  { color: #1a7340; font-weight: 700; }
+    .score-lose { color: #888; }
+    .score-zero { color: #c0392b; }
+
+    @media print {
+      body { padding: 20px 30px; }
+      h2 { page-break-after: avoid; }
+      table { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Capa -->
+<div class="capa">
+  <h1>Manual de Uso</h1>
+  <div class="subtitulo">Módulo VBA — Relatório de Pendências SAP</div>
+  <p class="intro">
+    Este documento explica como importar e utilizar o módulo <strong>ModuloPendencias</strong>
+    no Excel, e como preencher corretamente a tabela de regras (aba <strong>BASE</strong>)
+    para identificação automática das áreas responsáveis por partidas em aberto
+    exportadas do SAP (transação FBL3H).
+  </p>
+</div>
+
+<!-- 1. Visão Geral -->
+<h2>1. Visão Geral</h2>
+<p>
+  O módulo processa um relatório de partidas em aberto do SAP e, para cada linha,
+  identifica a <strong>Área Responsável</strong> pela contabilização com base em regras
+  definidas pelo usuário. Ao final, três colunas são adicionadas automaticamente ao relatório:
+</p>
+<ul>
+  <li><strong>Data Base</strong> — data em que o processamento foi executado.</li>
+  <li><strong>Dias em Aberto</strong> — diferença em dias entre a Data Base e a Data de Lançamento.</li>
+  <li><strong>Área Responsável</strong> — área identificada pelas regras da tabela BASE.</li>
+</ul>
+<div class="nota">
+  Linhas com o campo <strong>Tipo de Documento</strong> em branco são excluídas automaticamente antes do processamento.
+</div>
+
+<!-- 2. Exportação do SAP -->
+<h2>2. Exportando o Relatório do SAP</h2>
+<p>
+  O relatório deve ser gerado na transação <strong>FBL3H</strong> utilizando obrigatoriamente
+  a variante <strong>AGING</strong>, que já possui pré-configurados as empresas, as contas
+  do razão e o layout com as colunas esperadas pelo módulo.
+</p>
+
+<h3>2.1 Passo a passo para exportação</h3>
+<ol class="steps">
+  <li>Acesse a transação <strong>FBL3H</strong> no SAP.</li>
+  <li>Clique em <strong>Chamar variante…</strong> (<strong>Shift + F5</strong>).</li>
+  <li>No campo de variante, informe <strong>AGING</strong> e confirme.</li>
+  <li>Execute o relatório (<strong>F8</strong>).</li>
+  <li>Exporte para Excel: menu <em>Lista → Exportar como → Planilha eletrônica → Formato Microsoft Excel (*.xlsx)</em>.</li>
+  <li>Salve o arquivo e cole os dados na aba <strong>SAP</strong> do arquivo Excel com o módulo, a partir da linha 2.</li>
+</ol>
+
+<div class="aviso">
+  ⚠ Utilize <strong>sempre</strong> a variante <strong>AGING</strong>. Outras variantes ou layouts podem gerar colunas em ordem diferente, fazendo com que a macro leia campos incorretos e produza resultados errados.
+</div>
+
+<!-- 3. Estrutura -->
+<h2>3. Estrutura do Arquivo Excel</h2>
+<p>
+  O arquivo deve conter <strong>duas abas</strong> com os nomes exatos indicados abaixo
+  (incluindo maiúsculas e minúsculas).
+</p>
+
+<h3>3.1 Aba SAP — Dados do relatório FBL3H</h3>
+<p>Cole aqui o relatório exportado diretamente do SAP. A linha 1 deve ser o cabeçalho e os dados devem começar na linha 2.</p>
+
+<table>
+  <thead><tr><th>Coluna</th><th>Campo</th><th>Observação</th></tr></thead>
+  <tbody>
+    <tr><td>A</td><td>Empresa</td><td></td></tr>
+    <tr><td>B</td><td>Moeda da empresa</td><td></td></tr>
+    <tr><td>C</td><td>Conta do Razão</td><td>Usado na correspondência com as regras da BASE</td></tr>
+    <tr><td>D</td><td>Data de documento</td><td></td></tr>
+    <tr><td>E</td><td>Data de lançamento</td><td>Usada para calcular Dias em Aberto</td></tr>
+    <tr><td>F</td><td>Nº documento</td><td></td></tr>
+    <tr><td>G</td><td>Tipo de documento</td><td>⚠ Linhas com este campo em branco serão excluídas</td></tr>
+    <tr><td>H</td><td>Valor em moeda da empresa</td><td></td></tr>
+    <tr><td>I</td><td>Chave de lançamento</td><td></td></tr>
+    <tr><td>J</td><td>Atribuição</td><td></td></tr>
+    <tr><td>K</td><td>Texto</td><td>Usado na correspondência com as regras da BASE</td></tr>
+    <tr><td>L</td><td><em>Data Base</em> ✦ gerada pela macro</td><td>Preenchida automaticamente</td></tr>
+    <tr><td>M</td><td><em>Dias em Aberto</em> ✦ gerada pela macro</td><td>Preenchida automaticamente</td></tr>
+    <tr><td>N</td><td><em>Área Responsável</em> ✦ gerada pela macro</td><td>Preenchida automaticamente</td></tr>
+  </tbody>
+</table>
+
+<h3>3.2 Aba BASE — Tabela de regras</h3>
+<p>Esta aba contém as regras usadas para identificar a área responsável. A linha 1 deve ser o cabeçalho e as regras começam na linha 2.</p>
+
+<table>
+  <thead><tr><th>Coluna</th><th>Campo</th><th>Descrição</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>A</td><td>Conta do Razão</td>
+      <td>Conta contábil a filtrar. Deixe em branco para aplicar a regra a qualquer conta.</td>
+    </tr>
+    <tr>
+      <td>B</td><td>Começa em</td>
+      <td>O campo Texto do SAP deve <strong>começar</strong> com este valor. Deixe em branco para ignorar.</td>
+    </tr>
+    <tr>
+      <td>C</td><td>Contém</td>
+      <td>O campo Texto do SAP deve <strong>conter</strong> este valor em qualquer posição. Deixe em branco para ignorar.</td>
+    </tr>
+    <tr>
+      <td>D</td><td>Regex</td>
+      <td>Expressão regular aplicada ao campo Texto do SAP. Use para identificar padrões numéricos variáveis (ex: <code>^\d{4} \d{7}$</code>). Deixe em branco para ignorar.</td>
+    </tr>
+    <tr>
+      <td>E</td><td>Área Responsável</td>
+      <td>Nome da área que será preenchido no relatório. <strong>Obrigatório.</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- 4. Como preencher a BASE -->
+<h2>4. Como Preencher a Tabela BASE</h2>
+
+<h3>4.1 Lógica de pontuação (score)</h3>
+<p>
+  Para cada linha do SAP, a macro percorre todas as regras da BASE e calcula
+  uma pontuação de 0 a 3. A regra com <strong>maior pontuação</strong> vence.
+  Em caso de empate, prevalece a <strong>primeira regra na ordem da tabela</strong>.
+</p>
+
+<table>
+  <thead><tr><th>Condição avaliada</th><th style="width:80px;text-align:center">Pontos</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Conta do Razão em branco na BASE &nbsp;<strong>ou</strong>&nbsp; bate com a do SAP</td>
+      <td style="text-align:center">+1</td>
+    </tr>
+    <tr>
+      <td>Campo "Começa em" não está vazio &nbsp;<strong>e</strong>&nbsp; o Texto do SAP começa com ele</td>
+      <td style="text-align:center">+1</td>
+    </tr>
+    <tr>
+      <td>Campo "Contém" não está vazio &nbsp;<strong>e</strong>&nbsp; o Texto do SAP contém ele</td>
+      <td style="text-align:center">+1</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="nota">
+  <strong>Eliminação:</strong> se um campo não estiver em branco e não bater com o SAP,
+  a pontuação da regra vai a zero e ela é descartada imediatamente.
+</div>
+
+<h3>4.2 Exemplos práticos</h3>
+<p>Considere a seguinte tabela BASE cadastrada:</p>
+
+<table>
+  <thead><tr><th>Conta do Razão (A)</th><th>Começa em (B)</th><th>Contém (C)</th><th>Regex (D)</th><th>Área Responsável (E)</th></tr></thead>
+  <tbody>
+    <tr><td>28001107</td><td>TED-TRANSF</td><td>OPELLA</td><td></td><td>CONTAS A RECEBER</td></tr>
+    <tr><td>28001310</td><td></td><td>VISA</td><td></td><td>CONTABILIDADE</td></tr>
+    <tr><td></td><td></td><td></td><td><code>^\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2}\.\d{4}$</code></td><td>GESTÃO DE CAIXA</td></tr>
+    <tr><td>28001213</td><td></td><td></td><td></td><td>TRANSPORTADORA</td></tr>
+  </tbody>
+</table>
+
+<p style="margin-top:14px">Resultados para linhas do relatório SAP:</p>
+
+<table>
+  <thead><tr><th>Conta do Razão</th><th>Texto (SAP)</th><th style="text-align:center">Score</th><th>Área Responsável</th><th>Motivo</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>28001107</td>
+      <td>TED-TRANSF OPELLA HEALTHCARE 03/06</td>
+      <td style="text-align:center"><span class="score-win">3</span></td>
+      <td><span class="score-win">CONTAS A RECEBER</span></td>
+      <td>Conta + Começa em + Contém</td>
+    </tr>
+    <tr>
+      <td>28001310</td>
+      <td>PAGTO FATURA VISA 06/2026</td>
+      <td style="text-align:center"><span class="score-win">2</span></td>
+      <td><span class="score-win">CONTABILIDADE</span></td>
+      <td>Conta + Contém</td>
+    </tr>
+    <tr>
+      <td>28001107</td>
+      <td>0003305-48.2020.8.26.0565</td>
+      <td style="text-align:center"><span class="score-win">2</span></td>
+      <td><span class="score-win">GESTÃO DE CAIXA</span></td>
+      <td>Conta em branco (coringa) + Regex</td>
+    </tr>
+    <tr>
+      <td>28001213</td>
+      <td>NF 001234 TRANSP EXPRESS</td>
+      <td style="text-align:center"><span class="score-win">1</span></td>
+      <td><span class="score-win">TRANSPORTADORA</span></td>
+      <td>Conta apenas</td>
+    </tr>
+    <tr>
+      <td>28001107</td>
+      <td>DEVOLUCAO CLIENTE 999</td>
+      <td style="text-align:center"><span class="score-zero">0</span></td>
+      <td><span class="score-zero">⚠ Não identificado</span></td>
+      <td>Nenhuma regra correspondeu</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>4.3 Casos especiais</h3>
+<ul>
+  <li>
+    <strong>Conta em branco na BASE</strong> — a regra se aplica a qualquer conta do SAP
+    (útil para textos que aparecem em múltiplas contas).
+  </li>
+  <li>
+    <strong>"Começa em" e "Contém" ambos em branco</strong> — a regra é identificada
+    apenas pela conta. Todos os textos daquela conta serão atribuídos à área.
+  </li>
+  <li>
+    <strong>Nenhuma regra bate</strong> — a célula de Área Responsável recebe
+    "⚠ Não identificado". Adicione uma regra na BASE para cobrir esse caso.
+  </li>
+</ul>
+<div class="nota">
+  Todas as comparações de texto são <strong>insensíveis a maiúsculas/minúsculas</strong>.
+  "pix", "PIX" e "Pix" são tratados da mesma forma.
+</div>
+
+<h3>4.4 Boas práticas</h3>
+<ul>
+  <li>Coloque as regras <strong>mais específicas primeiro</strong> na tabela BASE.</li>
+  <li>Use "Começa em" quando o texto sempre inicia com um padrão fixo (ex: <code>PIX TRANSF</code>).</li>
+  <li>Use "Contém" quando o padrão pode aparecer em qualquer posição do texto.</li>
+  <li>Deixe a Conta do Razão em branco apenas quando o texto for único o suficiente para não gerar conflitos com outras contas.</li>
+  <li>Revise as linhas marcadas como "⚠ Não identificado" e adicione as regras faltantes.</li>
+</ul>
+
+<!-- 5. Importando o módulo -->
+<h2>5. Como Importar o Módulo VBA</h2>
+<p>
+  Siga os passos abaixo para adicionar o módulo ao seu arquivo Excel.
+  Este procedimento é feito <strong>uma única vez</strong> por arquivo.
+</p>
+<ol class="steps">
+  <li>Abra o arquivo Excel que contém as abas <strong>SAP</strong> e <strong>BASE</strong>.</li>
+  <li>Pressione <strong>Alt + F11</strong> para abrir o Editor Visual Basic (VBE).</li>
+  <li>No menu superior do VBE, clique em <strong>Arquivo → Importar Arquivo…</strong></li>
+  <li>Localize e selecione o arquivo <code>ModuloPendencias.bas</code> e clique em <strong>Abrir</strong>.</li>
+  <li>Confirme que o módulo <strong>ModuloPendencias</strong> aparece na lista à esquerda (Módulos).</li>
+  <li>Feche o VBE (<strong>Alt + Q</strong> ou clique no X da janela).</li>
+  <li>Salve o arquivo Excel no formato <strong>.xlsm</strong> (Excel com Macros Habilitadas).</li>
+</ol>
+<div class="aviso">
+  ⚠ Ao abrir o arquivo futuramente, o Excel pode exibir uma barra amarela pedindo para
+  <strong>"Habilitar Conteúdo"</strong>. Clique nesse botão para que as macros funcionem.
+</div>
+
+<!-- 6. Executando -->
+<h2>6. Executando as Macros</h2>
+
+<h3>6.1 ProcessarPendencias — macro principal</h3>
+<p>
+  Esta macro realiza todo o processamento: exclui linhas inválidas,
+  identifica as áreas responsáveis e preenche as colunas K, L e M.
+</p>
+<ol class="steps">
+  <li>Certifique-se de que as abas se chamam exatamente <strong>SAP</strong> e <strong>BASE</strong>.</li>
+  <li>Pressione <strong>Alt + F8</strong> para abrir a janela de macros.</li>
+  <li>Selecione <strong>ProcessarPendencias</strong> na lista e clique em <strong>Executar</strong>.</li>
+  <li>Aguarde. Para arquivos grandes (100 mil+ linhas) o processamento pode levar alguns minutos.</li>
+  <li>Ao final, uma mensagem exibirá o resumo: linhas analisadas, atribuídas e não identificadas.</li>
+</ol>
+
+<h3>6.2 LimparResultados — macro auxiliar</h3>
+<p>
+  Apaga o conteúdo das colunas K, L e M (incluindo os cabeçalhos) para
+  permitir reprocessamento com novos dados ou regras.
+</p>
+<ol class="steps">
+  <li>Pressione <strong>Alt + F8</strong> para abrir a janela de macros.</li>
+  <li>Selecione <strong>LimparResultados</strong> e clique em <strong>Executar</strong>.</li>
+  <li>Confirme que as colunas K, L e M foram esvaziadas.</li>
+</ol>
+<div class="nota">
+  Execute <strong>LimparResultados</strong> antes de <strong>ProcessarPendencias</strong>
+  sempre que substituir os dados do SAP ou atualizar as regras da BASE.
+</div>
+
+<!-- 7. Mensagens -->
+<h2>7. Mensagens e Situações Comuns</h2>
+
+<table>
+  <thead><tr><th>Mensagem / Situação</th><th>Causa</th><th>Solução</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Aba 'SAP' não encontrada</td>
+      <td>A aba com os dados não existe ou tem nome diferente.</td>
+      <td>Renomeie a aba para <strong>SAP</strong> (exatamente, com maiúsculas).</td>
+    </tr>
+    <tr>
+      <td>Aba 'BASE' não encontrada</td>
+      <td>A tabela de regras não existe ou tem nome diferente.</td>
+      <td>Renomeie a aba para <strong>BASE</strong> (exatamente, com maiúsculas).</td>
+    </tr>
+    <tr>
+      <td>Nenhum dado encontrado na aba 'SAP'</td>
+      <td>A aba SAP está vazia ou só tem o cabeçalho.</td>
+      <td>Cole os dados do FBL3H a partir da linha 2.</td>
+    </tr>
+    <tr>
+      <td>BASE vazia</td>
+      <td>A aba BASE não tem nenhuma regra cadastrada.</td>
+      <td>Adicione pelo menos uma regra a partir da linha 2.</td>
+    </tr>
+    <tr>
+      <td>Todas as linhas foram excluídas</td>
+      <td>Todas as linhas do SAP tinham Tipo de Documento em branco.</td>
+      <td>Verifique se o relatório foi exportado corretamente do SAP.</td>
+    </tr>
+    <tr>
+      <td>⚠ Não identificado na coluna M</td>
+      <td>Nenhuma regra da BASE corresponde àquela linha.</td>
+      <td>Adicione uma regra na BASE cobrindo o texto e/ou conta daquela linha.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- 8. Fluxo -->
+<h2>8. Fluxo Resumido de Uso</h2>
+<p>Siga este fluxo sempre que receber um novo relatório do SAP:</p>
+<ol class="steps">
+  <li>Exporte o relatório FBL3H do SAP.</li>
+  <li>Cole os dados na aba <strong>SAP</strong> a partir da linha 2 (preservando o cabeçalho na linha 1).</li>
+  <li>Verifique e atualize as regras na aba <strong>BASE</strong> se necessário.</li>
+  <li>Execute <strong>LimparResultados</strong> para apagar resultados anteriores.</li>
+  <li>Execute <strong>ProcessarPendencias</strong> para processar o novo relatório.</li>
+  <li>Revise as linhas marcadas como "⚠ Não identificado" e adicione regras se necessário.</li>
+  <li>Repita os passos 4–6 até que todas as linhas estejam identificadas.</li>
+</ol>
+
+</body>
+</html>
