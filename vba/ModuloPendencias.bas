@@ -56,6 +56,65 @@ Function CalcularScore(contaSAP As String, textoSAP As String, _
     CalcularScore = score
 End Function
 
+Sub ImportarSAP()
+    Dim wbOrigem  As Workbook
+    Dim wsOrigem  As Worksheet
+    Dim wsDestino As Worksheet
+    Dim arquivo   As Variant
+    Dim lastRowSrc As Long
+    Dim lastRowDest As Long
+    Dim lastCol   As Long
+    Dim arrData   As Variant
+
+    arquivo = Application.GetOpenFilename( _
+        FileFilter:="Excel (*.xlsx; *.xlsm; *.xls), *.xlsx; *.xlsm; *.xls", _
+        Title:="Selecione o relatório exportado do SAP")
+
+    If arquivo = False Then Exit Sub
+
+    On Error GoTo ErrHandler
+
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts  = False
+
+    Set wbOrigem = Workbooks.Open(Filename:=arquivo, ReadOnly:=True, UpdateLinks:=False)
+    Set wsOrigem = wbOrigem.Worksheets(1)
+
+    lastRowSrc = wsOrigem.Cells(wsOrigem.Rows.Count, "A").End(xlUp).Row
+
+    If lastRowSrc < 2 Then
+        wbOrigem.Close SaveChanges:=False
+        Application.ScreenUpdating = True
+        Application.DisplayAlerts  = True
+        MsgBox "O arquivo selecionado não contém dados a partir da linha 2.", vbExclamation, "Arquivo vazio"
+        Exit Sub
+    End If
+
+    Set wsDestino = ThisWorkbook.Worksheets("SAP")
+
+    lastRowDest = wsDestino.Cells(wsDestino.Rows.Count, "A").End(xlUp).Row
+    If lastRowDest >= 2 Then wsDestino.Rows("2:" & lastRowDest).Delete
+
+    lastCol = wsOrigem.Cells(1, wsOrigem.Columns.Count).End(xlToLeft).Column
+    arrData = wsOrigem.Range(wsOrigem.Cells(2, 1), wsOrigem.Cells(lastRowSrc, lastCol)).Value
+
+    wsDestino.Range("A2").Resize(lastRowSrc - 1, lastCol).Value = arrData
+
+    wbOrigem.Close SaveChanges:=False
+
+    Application.ScreenUpdating = True
+    Application.DisplayAlerts  = True
+
+    Call ProcessarPendencias
+    Exit Sub
+
+ErrHandler:
+    Application.ScreenUpdating = True
+    Application.DisplayAlerts  = True
+    If Not wbOrigem Is Nothing Then wbOrigem.Close SaveChanges:=False
+    MsgBox "Erro " & Err.Number & ": " & Err.Description, vbCritical, "Erro"
+End Sub
+
 Sub LimparResultados()
     Dim ws      As Worksheet
     Dim lastRow As Long
