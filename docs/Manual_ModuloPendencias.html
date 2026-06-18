@@ -192,12 +192,12 @@
   <li>Clique em <strong>Chamar variante…</strong> (<strong>Shift + F5</strong>).</li>
   <li>No campo de variante, informe <strong>AGING</strong> e confirme.</li>
   <li>Execute o relatório (<strong>F8</strong>).</li>
-  <li>Exporte para Excel: menu <em>Lista → Exportar como → Planilha eletrônica → Formato Microsoft Excel (*.xlsx)</em>.</li>
+  <li>Clique com o <strong>botão direito</strong> sobre o relatório para abrir o menu suspenso e selecione <em>Exportar como → Planilha eletrônica → Formato Microsoft Excel (*.xlsx)</em>.</li>
   <li>Salve o arquivo e cole os dados na aba <strong>SAP</strong> do arquivo Excel com o módulo, a partir da linha 2.</li>
 </ol>
 
 <div class="aviso">
-  ⚠ Utilize <strong>sempre</strong> a variante <strong>AGING</strong>. Outras variantes ou layouts podem gerar colunas em ordem diferente, fazendo com que a macro leia campos incorretos e produza resultados errados.
+  Utilize <strong>sempre</strong> a variante <strong>AGING</strong>. Outras variantes ou layouts podem gerar colunas em ordem diferente, fazendo com que a macro leia campos incorretos e produza resultados errados.
 </div>
 
 <!-- 3. Estrutura -->
@@ -219,7 +219,7 @@
     <tr><td>D</td><td>Data de documento</td><td></td></tr>
     <tr><td>E</td><td>Data de lançamento</td><td>Usada para calcular Dias em Aberto</td></tr>
     <tr><td>F</td><td>Nº documento</td><td></td></tr>
-    <tr><td>G</td><td>Tipo de documento</td><td>⚠ Linhas com este campo em branco serão excluídas</td></tr>
+    <tr><td>G</td><td>Tipo de documento</td><td>Linhas com este campo em branco serão excluídas</td></tr>
     <tr><td>H</td><td>Valor em moeda da empresa</td><td></td></tr>
     <tr><td>I</td><td>Chave de lançamento</td><td></td></tr>
     <tr><td>J</td><td>Atribuição</td><td></td></tr>
@@ -265,7 +265,7 @@
 <h3>4.1 Lógica de pontuação (score)</h3>
 <p>
   Para cada linha do SAP, a macro percorre todas as regras da BASE e calcula
-  uma pontuação de 0 a 3. A regra com <strong>maior pontuação</strong> vence.
+  uma pontuação de 0 a 4. A regra com <strong>maior pontuação</strong> vence.
   Em caso de empate, prevalece a <strong>primeira regra na ordem da tabela</strong>.
 </p>
 
@@ -282,6 +282,10 @@
     </tr>
     <tr>
       <td>Campo "Contém" não está vazio &nbsp;<strong>e</strong>&nbsp; o Texto do SAP contém ele</td>
+      <td style="text-align:center">+1</td>
+    </tr>
+    <tr>
+      <td>Campo "Regex" não está vazio &nbsp;<strong>e</strong>&nbsp; o Texto do SAP corresponde ao padrão</td>
       <td style="text-align:center">+1</td>
     </tr>
   </tbody>
@@ -312,14 +316,14 @@
   <tbody>
     <tr>
       <td>28001107</td>
-      <td>TED-TRANSF OPELLA HEALTHCARE 03/06</td>
+      <td>TED-TRANSF ELET DISPON 3507787REMET.OPELLA</td>
       <td style="text-align:center"><span class="score-win">3</span></td>
       <td><span class="score-win">CONTAS A RECEBER</span></td>
       <td>Conta + Começa em + Contém</td>
     </tr>
     <tr>
       <td>28001310</td>
-      <td>PAGTO FATURA VISA 06/2026</td>
+      <td>REDE VISA CREDITO 4861956REDECARD S A</td>
       <td style="text-align:center"><span class="score-win">2</span></td>
       <td><span class="score-win">CONTABILIDADE</span></td>
       <td>Conta + Contém</td>
@@ -333,16 +337,16 @@
     </tr>
     <tr>
       <td>28001213</td>
-      <td>NF 001234 TRANSP EXPRESS</td>
+      <td>CARGA CARTAO TRANSPORTES-00820227 3298861</td>
       <td style="text-align:center"><span class="score-win">1</span></td>
       <td><span class="score-win">TRANSPORTADORA</span></td>
       <td>Conta apenas</td>
     </tr>
     <tr>
       <td>28001107</td>
-      <td>DEVOLUCAO CLIENTE 999</td>
+      <td>TARIFA BANCARIA 001</td>
       <td style="text-align:center"><span class="score-zero">0</span></td>
-      <td><span class="score-zero">⚠ Não identificado</span></td>
+      <td><span class="score-zero">Não identificado</span></td>
       <td>Nenhuma regra correspondeu</td>
     </tr>
   </tbody>
@@ -360,7 +364,7 @@
   </li>
   <li>
     <strong>Nenhuma regra bate</strong> — a célula de Área Responsável recebe
-    "⚠ Não identificado". Adicione uma regra na BASE para cobrir esse caso.
+    "Não identificado". Adicione uma regra na BASE para cobrir esse caso.
   </li>
 </ul>
 <div class="nota">
@@ -368,13 +372,69 @@
   "pix", "PIX" e "Pix" são tratados da mesma forma.
 </div>
 
-<h3>4.4 Boas práticas</h3>
+<h3>4.4 Como usar o campo Regex</h3>
+<p>
+  Use a coluna Regex (D) quando o texto do SAP não tem uma parte fixa que permita
+  usar "Começa em" ou "Contém" — como números de processo, códigos e identificadores
+  com estrutura variável.
+</p>
+<p>
+  O Regex é uma <strong>expressão regular</strong>: uma sequência de caracteres que descreve
+  um padrão de texto. A macro testa se o Texto do SAP corresponde ao padrão informado.
+  A comparação é insensível a maiúsculas/minúsculas.
+</p>
+
+<p><strong>Referência rápida dos símbolos mais usados:</strong></p>
+<table>
+  <thead><tr><th>Símbolo</th><th>Significado</th><th>Exemplo</th></tr></thead>
+  <tbody>
+    <tr><td><code>\d</code></td><td>Qualquer dígito (0–9)</td><td><code>\d</code> corresponde a <em>3</em>, <em>7</em></td></tr>
+    <tr><td><code>{n}</code></td><td>Exatamente n repetições</td><td><code>\d{4}</code> corresponde a <em>2020</em></td></tr>
+    <tr><td><code>\.</code></td><td>Ponto literal</td><td><code>\.</code> corresponde a <em>.</em> (não a qualquer caractere)</td></tr>
+    <tr><td><code>-</code></td><td>Hífen literal</td><td><code>-</code> corresponde a <em>-</em></td></tr>
+    <tr><td><code> </code> (espaço)</td><td>Espaço literal</td><td><code>\d{4} \d{7}</code> corresponde a <em>XXXX XXXXXXX</em></td></tr>
+    <tr><td><code>^</code></td><td>Início do texto</td><td><code>^\d{4}</code> — texto deve começar com 4 dígitos</td></tr>
+    <tr><td><code>$</code></td><td>Fim do texto</td><td><code>\d{4}$</code> — texto deve terminar com 4 dígitos</td></tr>
+  </tbody>
+</table>
+
+<p style="margin-top:14px"><strong>Exemplos de padrões:</strong></p>
+<table>
+  <thead><tr><th>Texto SAP</th><th>Padrão Regex</th><th>Correspondência</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>1234567-89.0123.4.56.7890</code></td>
+      <td><code>^\d{7}-\d{2}\.\d{4}\.\d{1}\.\d{2}\.\d{4}$</code></td>
+      <td>Número de processo judicial</td>
+    </tr>
+    <tr>
+      <td><code>1234 5678901</code></td>
+      <td><code>^\d{4} \d{7}$</code></td>
+      <td>Código com 4 dígitos, espaço e 7 dígitos</td>
+    </tr>
+    <tr>
+      <td><code>1234567-89.0123</code></td>
+      <td><code>^\d{7}-\d{2}\.\d{4}$</code></td>
+      <td>Identificador com hífen e ponto</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="nota">
+  Use <code>^</code> e <code>$</code> para garantir que o padrão corresponda ao texto
+  inteiro — sem eles, um trecho qualquer do texto já satisfaz a regra, o que pode gerar
+  falsos positivos. Deixe o campo Regex em branco quando "Começa em" ou "Contém" já forem
+  suficientes.
+</div>
+
+<h3>4.5 Boas práticas</h3>
 <ul>
   <li>Coloque as regras <strong>mais específicas primeiro</strong> na tabela BASE.</li>
-  <li>Use "Começa em" quando o texto sempre inicia com um padrão fixo (ex: <code>PIX TRANSF</code>).</li>
+  <li>Use "Começa em" quando o texto sempre inicia com um padrão fixo (ex: <code>TED-TRANSF</code>).</li>
   <li>Use "Contém" quando o padrão pode aparecer em qualquer posição do texto.</li>
+  <li>Use "Regex" apenas quando o texto não tem parte fixa — somente estrutura numérica variável.</li>
   <li>Deixe a Conta do Razão em branco apenas quando o texto for único o suficiente para não gerar conflitos com outras contas.</li>
-  <li>Revise as linhas marcadas como "⚠ Não identificado" e adicione as regras faltantes.</li>
+  <li>Revise as linhas marcadas como "Não identificado" e adicione as regras faltantes.</li>
 </ul>
 
 <!-- 5. Importando o módulo -->
@@ -393,7 +453,7 @@
   <li>Salve o arquivo Excel no formato <strong>.xlsm</strong> (Excel com Macros Habilitadas).</li>
 </ol>
 <div class="aviso">
-  ⚠ Ao abrir o arquivo futuramente, o Excel pode exibir uma barra amarela pedindo para
+  Ao abrir o arquivo futuramente, o Excel pode exibir uma barra amarela pedindo para
   <strong>"Habilitar Conteúdo"</strong>. Clique nesse botão para que as macros funcionem.
 </div>
 
@@ -460,7 +520,7 @@
       <td>Verifique se o relatório foi exportado corretamente do SAP.</td>
     </tr>
     <tr>
-      <td>⚠ Não identificado na coluna M</td>
+      <td>Não identificado na coluna M</td>
       <td>Nenhuma regra da BASE corresponde àquela linha.</td>
       <td>Adicione uma regra na BASE cobrindo o texto e/ou conta daquela linha.</td>
     </tr>
@@ -476,7 +536,7 @@
   <li>Verifique e atualize as regras na aba <strong>BASE</strong> se necessário.</li>
   <li>Execute <strong>LimparResultados</strong> para apagar resultados anteriores.</li>
   <li>Execute <strong>ProcessarPendencias</strong> para processar o novo relatório.</li>
-  <li>Revise as linhas marcadas como "⚠ Não identificado" e adicione regras se necessário.</li>
+  <li>Revise as linhas marcadas como "Não identificado" e adicione regras se necessário.</li>
   <li>Repita os passos 4–6 até que todas as linhas estejam identificadas.</li>
 </ol>
 
