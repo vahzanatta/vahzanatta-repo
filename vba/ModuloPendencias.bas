@@ -187,7 +187,7 @@ ProximaRegra:
             arrOut(i, 3) = bestArea
             totalAtrib = totalAtrib + 1
         Else
-            arrOut(i, 3) = Chr(9888) & " Não identificado"
+            arrOut(i, 3) = ChrW(9888) & " Não identificado"
             totalNaoId = totalNaoId + 1
         End If
     Next i
