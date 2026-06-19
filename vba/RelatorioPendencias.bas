@@ -1,4 +1,4 @@
-Attribute VB_Name = "ModuloPendencias"
+Attribute VB_Name = "RelatorioPendencias"
 Option Explicit
 
 Function CalcularScore(contaSAP As String, textoSAP As String, _
