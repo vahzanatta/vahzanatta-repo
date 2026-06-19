@@ -255,6 +255,10 @@
   <thead><tr><th>Condição avaliada</th><th style="width:80px;text-align:center">Pontos</th></tr></thead>
   <tbody>
     <tr>
+      <td><strong>Apenas Conta do Razão preenchida</strong> (B, C e D em branco) &nbsp;<strong>e</strong>&nbsp; bate com a do SAP</td>
+      <td style="text-align:center"><strong>5</strong> ★</td>
+    </tr>
+    <tr>
       <td>Conta do Razão em branco na BASE &nbsp;<strong>ou</strong>&nbsp; bate com a do SAP</td>
       <td style="text-align:center">+1</td>
     </tr>
@@ -273,6 +277,9 @@
   </tbody>
 </table>
 
+<div class="nota">
+  <strong>★ Prioridade máxima:</strong> regras com <strong>apenas a Conta do Razão preenchida</strong> recebem score 5 quando a conta bate, sobrepondo-se a qualquer outra regra. Use para contas que pertencem a uma única área independentemente do texto.
+</div>
 <div class="nota">
   <strong>Eliminação:</strong> se um campo não estiver em branco e não bater com o SAP,
   a pontuação da regra vai a zero e ela é descartada imediatamente.
@@ -320,9 +327,9 @@
     <tr>
       <td>28001213</td>
       <td>CARGA CARTAO TRANSPORTES-00820227 3298861</td>
-      <td style="text-align:center"><span class="score-win">1</span></td>
+      <td style="text-align:center"><span class="score-win">5 ★</span></td>
       <td><span class="score-win">TRANSPORTADORA</span></td>
-      <td>Conta apenas</td>
+      <td>Apenas conta — prioridade máxima</td>
     </tr>
     <tr>
       <td>28001107</td>

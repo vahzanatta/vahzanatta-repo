@@ -230,7 +230,15 @@ Private Sub ProcessarPendencias()
 
             If areaBase = "" Then GoTo ProximaRegra
 
-            scoreAtual = CalcularScore(contaSAP, textoSAP, contaBase, comecaEm, contem, regexStr)
+            If contaBase <> "" And comecaEm = "" And contem = "" And regexStr = "" Then
+                If StrComp(contaSAP, contaBase, vbTextCompare) = 0 Then
+                    scoreAtual = 5
+                Else
+                    scoreAtual = 0
+                End If
+            Else
+                scoreAtual = CalcularScore(contaSAP, textoSAP, contaBase, comecaEm, contem, regexStr)
+            End If
 
             If scoreAtual > bestScore Then
                 bestScore = scoreAtual
