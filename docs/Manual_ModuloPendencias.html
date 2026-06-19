@@ -178,37 +178,15 @@
   Linhas com o campo <strong>Tipo de Documento</strong> em branco são excluídas automaticamente antes do processamento.
 </div>
 
-<!-- 2. Exportação do SAP -->
-<h2>2. Exportando o Relatório do SAP</h2>
-<p>
-  O relatório deve ser gerado na transação <strong>FBL3H</strong> utilizando obrigatoriamente
-  a variante <strong>AGING</strong>, que já possui pré-configurados as empresas, as contas
-  do razão e o layout com as colunas esperadas pelo módulo.
-</p>
-
-<h3>2.1 Passo a passo para exportação</h3>
-<ol class="steps">
-  <li>Acesse a transação <strong>FBL3H</strong> no SAP.</li>
-  <li>Clique em <strong>Chamar variante…</strong> (<strong>Shift + F5</strong>).</li>
-  <li>No campo de variante, informe <strong>AGING</strong> e confirme.</li>
-  <li>Execute o relatório (<strong>F8</strong>).</li>
-  <li>Clique com o <strong>botão direito</strong> sobre o relatório para abrir o menu suspenso e selecione <em>Exportar como → Planilha eletrônica → Formato Microsoft Excel (*.xlsx)</em>.</li>
-  <li>Salve o arquivo e cole os dados na aba <strong>SAP</strong> do arquivo Excel com o módulo, a partir da linha 2.</li>
-</ol>
-
-<div class="aviso">
-  Utilize <strong>sempre</strong> a variante <strong>AGING</strong>. Outras variantes ou layouts podem gerar colunas em ordem diferente, fazendo com que a macro leia campos incorretos e produza resultados errados.
-</div>
-
-<!-- 3. Estrutura -->
-<h2>3. Estrutura do Arquivo Excel</h2>
+<!-- 2. Estrutura -->
+<h2>2. Estrutura do Arquivo Excel</h2>
 <p>
   O arquivo deve conter <strong>duas abas</strong> com os nomes exatos indicados abaixo
   (incluindo maiúsculas e minúsculas).
 </p>
 
-<h3>3.1 Aba SAP — Dados do relatório FBL3H</h3>
-<p>Cole aqui o relatório exportado diretamente do SAP. A linha 1 deve ser o cabeçalho e os dados devem começar na linha 2.</p>
+<h3>2.1 Aba SAP — Dados do relatório FBL3H</h3>
+<p>Esta aba recebe o relatório exportado do SAP. A linha 1 deve ser o cabeçalho e os dados devem começar na linha 2.</p>
 
 <table>
   <thead><tr><th>Coluna</th><th>Campo</th><th>Observação</th></tr></thead>
@@ -230,7 +208,7 @@
   </tbody>
 </table>
 
-<h3>3.2 Aba BASE — Tabela de regras</h3>
+<h3>2.2 Aba BASE — Tabela de regras</h3>
 <p>Esta aba contém as regras usadas para identificar a área responsável. A linha 1 deve ser o cabeçalho e as regras começam na linha 2.</p>
 
 <table>
@@ -254,15 +232,19 @@
     </tr>
     <tr>
       <td>E</td><td>Área Responsável</td>
-      <td>Nome da área que será preenchido no relatório. <strong>Obrigatório.</strong></td>
+      <td>Nome da área que será preenchido no relatório. <strong>Obrigatório.</strong> Regras sem este campo são ignoradas.</td>
     </tr>
   </tbody>
 </table>
 
-<!-- 4. Como preencher a BASE -->
-<h2>4. Como Preencher a Tabela BASE</h2>
+<div class="nota">
+  Qualquer combinação de colunas é válida — inclusive regras com apenas <strong>Regex</strong> e <strong>Área Responsável</strong> preenchidos (colunas A, B e C em branco). Nesse caso a conta é tratada como coringa e o texto é avaliado somente pelo padrão Regex.
+</div>
 
-<h3>4.1 Lógica de pontuação (score)</h3>
+<!-- 3. Como preencher a BASE -->
+<h2>3. Como Preencher a Tabela BASE</h2>
+
+<h3>3.1 Lógica de pontuação (score)</h3>
 <p>
   Para cada linha do SAP, a macro percorre todas as regras da BASE e calcula
   uma pontuação de 0 a 4. A regra com <strong>maior pontuação</strong> vence.
@@ -296,7 +278,7 @@
   a pontuação da regra vai a zero e ela é descartada imediatamente.
 </div>
 
-<h3>4.2 Exemplos práticos</h3>
+<h3>3.2 Exemplos práticos</h3>
 <p>Considere a seguinte tabela BASE cadastrada:</p>
 
 <table>
@@ -352,11 +334,15 @@
   </tbody>
 </table>
 
-<h3>4.3 Casos especiais</h3>
+<h3>3.3 Casos especiais</h3>
 <ul>
   <li>
     <strong>Conta em branco na BASE</strong> — a regra se aplica a qualquer conta do SAP
     (útil para textos que aparecem em múltiplas contas).
+  </li>
+  <li>
+    <strong>Apenas Regex + Área preenchidos</strong> — colunas A, B e C podem ficar em branco.
+    A regra será aplicada a qualquer conta cuja linha do SAP corresponda ao padrão Regex.
   </li>
   <li>
     <strong>"Começa em" e "Contém" ambos em branco</strong> — a regra é identificada
@@ -372,7 +358,7 @@
   "pix", "PIX" e "Pix" são tratados da mesma forma.
 </div>
 
-<h3>4.4 Como usar o campo Regex</h3>
+<h3>3.4 Como usar o campo Regex</h3>
 <p>
   Use a coluna Regex (D) quando o texto do SAP não tem uma parte fixa que permita
   usar "Começa em" ou "Contém" — como números de processo, códigos e identificadores
@@ -427,18 +413,18 @@
   suficientes.
 </div>
 
-<h3>4.5 Boas práticas</h3>
+<h3>3.5 Boas práticas</h3>
 <ul>
   <li>Coloque as regras <strong>mais específicas primeiro</strong> na tabela BASE.</li>
   <li>Use "Começa em" quando o texto sempre inicia com um padrão fixo (ex: <code>TED-TRANSF</code>).</li>
   <li>Use "Contém" quando o padrão pode aparecer em qualquer posição do texto.</li>
-  <li>Use "Regex" apenas quando o texto não tem parte fixa — somente estrutura numérica variável.</li>
+  <li>Use "Regex" apenas quando o texto não tem parte fixa — somente estrutura variável.</li>
   <li>Deixe a Conta do Razão em branco apenas quando o texto for único o suficiente para não gerar conflitos com outras contas.</li>
   <li>Revise as linhas marcadas como "Não identificado" e adicione as regras faltantes.</li>
 </ul>
 
-<!-- 5. Importando o módulo -->
-<h2>5. Como Importar o Módulo VBA</h2>
+<!-- 4. Importando o módulo -->
+<h2>4. Como Importar o Módulo VBA</h2>
 <p>
   Siga os passos abaixo para adicionar o módulo ao seu arquivo Excel.
   Este procedimento é feito <strong>uma única vez</strong> por arquivo.
@@ -457,35 +443,76 @@
   <strong>"Habilitar Conteúdo"</strong>. Clique nesse botão para que as macros funcionem.
 </div>
 
-<!-- 6. Executando -->
-<h2>6. Executando as Macros</h2>
+<!-- 5. Macros -->
+<h2>5. Macros Disponíveis</h2>
 
-<h3>6.1 ProcessarPendencias — macro principal</h3>
+<h3>5.1 ImportarSAP — importação e processamento automático</h3>
 <p>
-  Esta macro realiza todo o processamento: exclui linhas inválidas,
-  identifica as áreas responsáveis e preenche as colunas K, L e M.
+  Esta é a macro principal do fluxo de trabalho. Ao ser executada, abre um diálogo para
+  que você selecione o arquivo exportado do SAP, importa os dados diretamente para a aba
+  <strong>SAP</strong> e, em seguida, executa o processamento automaticamente.
 </p>
 <ol class="steps">
   <li>Certifique-se de que as abas se chamam exatamente <strong>SAP</strong> e <strong>BASE</strong>.</li>
   <li>Pressione <strong>Alt + F8</strong> para abrir a janela de macros.</li>
-  <li>Selecione <strong>ProcessarPendencias</strong> na lista e clique em <strong>Executar</strong>.</li>
-  <li>Aguarde. Para arquivos grandes (100 mil+ linhas) o processamento pode levar alguns minutos.</li>
+  <li>Selecione <strong>ImportarSAP</strong> na lista e clique em <strong>Executar</strong>.</li>
+  <li>Na janela que abrir, localize e selecione o arquivo exportado do SAP (<code>.xlsx</code>, <code>.xlsm</code> ou <code>.xls</code>).</li>
+  <li>Aguarde. Os dados serão importados e o processamento será executado automaticamente.</li>
   <li>Ao final, uma mensagem exibirá o resumo: linhas analisadas, atribuídas e não identificadas.</li>
 </ol>
+<div class="nota">
+  A macro <strong>ImportarSAP</strong> substitui os dados anteriores da aba SAP antes de importar.
+  Não é necessário limpar os dados manualmente antes de utilizá-la.
+</div>
 
-<h3>6.2 LimparResultados — macro auxiliar</h3>
+<h3>5.2 ProcessarPendencias — reprocessamento manual</h3>
 <p>
-  Apaga o conteúdo das colunas K, L e M (incluindo os cabeçalhos) para
-  permitir reprocessamento com novos dados ou regras.
+  Executa apenas o processamento sobre os dados já presentes na aba SAP, sem importar
+  nenhum arquivo. Útil quando você atualiza as regras da BASE e deseja reprocessar sem
+  reimportar o relatório.
+</p>
+<ol class="steps">
+  <li>Pressione <strong>Alt + F8</strong> para abrir a janela de macros.</li>
+  <li>Selecione <strong>ProcessarPendencias</strong> e clique em <strong>Executar</strong>.</li>
+  <li>Ao final, uma mensagem exibirá o resumo do processamento.</li>
+</ol>
+
+<h3>5.3 LimparResultados — limpar e reprocessar</h3>
+<p>
+  Apaga o conteúdo das colunas L, M e N (Data Base, Dias em Aberto e Área Responsável)
+  e, na sequência, executa <strong>ProcessarPendencias</strong> automaticamente.
+  Use quando quiser forçar um reprocessamento completo a partir dos dados atuais da aba SAP.
 </p>
 <ol class="steps">
   <li>Pressione <strong>Alt + F8</strong> para abrir a janela de macros.</li>
   <li>Selecione <strong>LimparResultados</strong> e clique em <strong>Executar</strong>.</li>
-  <li>Confirme que as colunas K, L e M foram esvaziadas.</li>
+  <li>As colunas L, M e N serão limpas e o processamento será iniciado automaticamente.</li>
 </ol>
 <div class="nota">
-  Execute <strong>LimparResultados</strong> antes de <strong>ProcessarPendencias</strong>
-  sempre que substituir os dados do SAP ou atualizar as regras da BASE.
+  Após a limpeza, o processamento roda imediatamente sem necessidade de executar outra macro.
+</div>
+
+<!-- 6. Exportação do SAP -->
+<h2>6. Exportando o Relatório do SAP</h2>
+<p>
+  O relatório deve ser gerado na transação <strong>FBL3H</strong> utilizando obrigatoriamente
+  a variante <strong>AGING</strong>, que já possui pré-configurados as empresas, as contas
+  do razão e o layout com as colunas esperadas pelo módulo.
+</p>
+
+<h3>6.1 Passo a passo para exportação</h3>
+<ol class="steps">
+  <li>Acesse a transação <strong>FBL3H</strong> no SAP.</li>
+  <li>Clique em <strong>Chamar variante…</strong> (<strong>Shift + F5</strong>).</li>
+  <li>No campo de variante, informe <strong>AGING</strong> e confirme.</li>
+  <li>Execute o relatório (<strong>F8</strong>).</li>
+  <li>Clique com o <strong>botão direito</strong> sobre o relatório para abrir o menu suspenso e selecione <em>Exportar como → Planilha eletrônica → Formato Microsoft Excel (*.xlsx)</em>.</li>
+  <li>Salve o arquivo em um local de fácil acesso.</li>
+  <li>No Excel, execute a macro <strong>ImportarSAP</strong> e selecione o arquivo salvo.</li>
+</ol>
+
+<div class="aviso">
+  Utilize <strong>sempre</strong> a variante <strong>AGING</strong>. Outras variantes ou layouts podem gerar colunas em ordem diferente, fazendo com que a macro leia campos incorretos e produza resultados errados.
 </div>
 
 <!-- 7. Mensagens -->
@@ -505,14 +532,19 @@
       <td>Renomeie a aba para <strong>BASE</strong> (exatamente, com maiúsculas).</td>
     </tr>
     <tr>
+      <td>O arquivo selecionado não contém dados a partir da linha 2</td>
+      <td>O arquivo SAP selecionado está vazio ou só tem o cabeçalho.</td>
+      <td>Verifique se o arquivo exportado do SAP está correto.</td>
+    </tr>
+    <tr>
       <td>Nenhum dado encontrado na aba 'SAP'</td>
       <td>A aba SAP está vazia ou só tem o cabeçalho.</td>
-      <td>Cole os dados do FBL3H a partir da linha 2.</td>
+      <td>Execute <strong>ImportarSAP</strong> para importar o relatório.</td>
     </tr>
     <tr>
       <td>BASE vazia</td>
-      <td>A aba BASE não tem nenhuma regra cadastrada.</td>
-      <td>Adicione pelo menos uma regra a partir da linha 2.</td>
+      <td>A aba BASE não tem nenhuma regra com Área Responsável preenchida.</td>
+      <td>Adicione pelo menos uma regra a partir da linha 2, com a coluna E (Área Responsável) preenchida.</td>
     </tr>
     <tr>
       <td>Todas as linhas foram excluídas</td>
@@ -520,7 +552,7 @@
       <td>Verifique se o relatório foi exportado corretamente do SAP.</td>
     </tr>
     <tr>
-      <td>Não identificado na coluna M</td>
+      <td>⚠ Não identificado na coluna N</td>
       <td>Nenhuma regra da BASE corresponde àquela linha.</td>
       <td>Adicione uma regra na BASE cobrindo o texto e/ou conta daquela linha.</td>
     </tr>
@@ -531,13 +563,12 @@
 <h2>8. Fluxo Resumido de Uso</h2>
 <p>Siga este fluxo sempre que receber um novo relatório do SAP:</p>
 <ol class="steps">
-  <li>Exporte o relatório FBL3H do SAP.</li>
-  <li>Cole os dados na aba <strong>SAP</strong> a partir da linha 2 (preservando o cabeçalho na linha 1).</li>
-  <li>Verifique e atualize as regras na aba <strong>BASE</strong> se necessário.</li>
-  <li>Execute <strong>LimparResultados</strong> para apagar resultados anteriores.</li>
-  <li>Execute <strong>ProcessarPendencias</strong> para processar o novo relatório.</li>
-  <li>Revise as linhas marcadas como "Não identificado" e adicione regras se necessário.</li>
-  <li>Repita os passos 4–6 até que todas as linhas estejam identificadas.</li>
+  <li>Exporte o relatório FBL3H do SAP usando a variante <strong>AGING</strong>.</li>
+  <li>No Excel, execute <strong>ImportarSAP</strong> e selecione o arquivo exportado.</li>
+  <li>Os dados serão importados e o processamento ocorrerá automaticamente.</li>
+  <li>Revise as linhas marcadas como "Não identificado" na coluna N.</li>
+  <li>Se necessário, atualize as regras na aba <strong>BASE</strong> e execute <strong>LimparResultados</strong> para reprocessar.</li>
+  <li>Repita o passo 5 até que todas as linhas estejam identificadas.</li>
 </ol>
 
 </body>
