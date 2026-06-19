@@ -108,7 +108,7 @@ ErrHandler:
     MsgBox "Erro " & Err.Number & ": " & Err.Description, vbCritical, "Erro"
 End Sub
 
-Sub LimparResultados()
+Sub ReprocessarResultados()
     Dim ws      As Worksheet
     Dim lastRow As Long
 
