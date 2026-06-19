@@ -127,7 +127,7 @@ ErrHandler:
     MsgBox "Erro " & Err.Number & ": " & Err.Description, vbCritical, "Erro"
 End Sub
 
-Sub ProcessarPendencias()
+Private Sub ProcessarPendencias()
     Dim wsSAP       As Worksheet
     Dim wsBase      As Worksheet
     Dim lastRowSAP  As Long
