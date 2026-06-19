@@ -120,7 +120,7 @@ Sub LimparResultados()
 
     ws.Range("L1:N" & lastRow).ClearContents
 
-    MsgBox "Colunas L:N limpas com sucesso.", vbInformation, "Limpeza Concluída"
+    Call ProcessarPendencias
     Exit Sub
 
 ErrHandler:
