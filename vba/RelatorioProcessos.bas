@@ -1,6 +1,72 @@
 Attribute VB_Name = "RelatorioProcessos"
 Option Explicit
 
+Sub ImportarRelatorios()
+    Dim arquivoResg As Variant
+    Dim arquivoMov  As Variant
+
+    arquivoResg = Application.GetOpenFilename( _
+        FileFilter:="Excel (*.xlsx; *.xlsm; *.xls), *.xlsx; *.xlsm; *.xls", _
+        Title:="Selecione o relatório de RESGATES")
+    If arquivoResg = False Then Exit Sub
+
+    arquivoMov = Application.GetOpenFilename( _
+        FileFilter:="Excel (*.xlsx; *.xlsm; *.xls), *.xlsx; *.xlsm; *.xls", _
+        Title:="Selecione o relatório de MOVIMENTO")
+    If arquivoMov = False Then Exit Sub
+
+    On Error GoTo ErrHandler
+
+    Application.ScreenUpdating = False
+    Application.DisplayAlerts  = False
+
+    Call ImportarParaAba(arquivoResg, "RESGATES")
+    Call ImportarParaAba(arquivoMov, "MOVIMENTO")
+
+    Application.ScreenUpdating = True
+    Application.DisplayAlerts  = True
+
+    Call AnalisarProcessos
+    Exit Sub
+
+ErrHandler:
+    Application.ScreenUpdating = True
+    Application.DisplayAlerts  = True
+    MsgBox "Erro " & Err.Number & ": " & Err.Description, vbCritical, "Erro"
+End Sub
+
+Private Sub ImportarParaAba(arquivo As Variant, nomeAba As String)
+    Dim wbOrigem  As Workbook
+    Dim wsOrigem  As Worksheet
+    Dim wsDestino As Worksheet
+    Dim lastRowSrc As Long
+    Dim lastCol    As Long
+    Dim arrData    As Variant
+
+    Set wbOrigem  = Workbooks.Open(Filename:=arquivo, ReadOnly:=True, UpdateLinks:=False)
+    Set wsOrigem  = wbOrigem.Worksheets(1)
+    Set wsDestino = ThisWorkbook.Worksheets(nomeAba)
+
+    lastRowSrc = wsOrigem.Cells(wsOrigem.Rows.Count, "A").End(xlUp).Row
+
+    If lastRowSrc < 2 Then
+        wbOrigem.Close SaveChanges:=False
+        MsgBox "O arquivo selecionado para '" & nomeAba & "' não contém dados a partir da linha 2.", vbExclamation, "Arquivo vazio"
+        Exit Sub
+    End If
+
+    Dim lastRowDest As Long
+    lastRowDest = wsDestino.Cells(wsDestino.Rows.Count, "A").End(xlUp).Row
+    If lastRowDest >= 2 Then wsDestino.Rows("2:" & lastRowDest).Delete
+
+    lastCol = wsOrigem.Cells(1, wsOrigem.Columns.Count).End(xlToLeft).Column
+    arrData = wsOrigem.Range(wsOrigem.Cells(2, 1), wsOrigem.Cells(lastRowSrc, lastCol)).Value
+
+    wsDestino.Range("A2").Resize(lastRowSrc - 1, lastCol).Value = arrData
+
+    wbOrigem.Close SaveChanges:=False
+End Sub
+
 Sub AnalisarProcessos()
     Dim wsProc  As Worksheet
     Dim wsResg  As Worksheet
