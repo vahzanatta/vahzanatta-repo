@@ -70,12 +70,12 @@ Private Sub ImportarParaAba(arquivo As Variant, nomeAba As String)
 
     Dim lastRowDest As Long
     lastRowDest = wsDestino.Cells(wsDestino.Rows.Count, "A").End(xlUp).Row
-    If lastRowDest >= 2 Then wsDestino.Rows("2:" & lastRowDest).Delete
+    If lastRowDest >= 1 Then wsDestino.Rows("1:" & lastRowDest).Delete
 
     lastCol = wsOrigem.Cells(1, wsOrigem.Columns.Count).End(xlToLeft).Column
-    arrData = wsOrigem.Range(wsOrigem.Cells(2, 1), wsOrigem.Cells(lastRowSrc, lastCol)).Value
+    arrData = wsOrigem.Range(wsOrigem.Cells(1, 1), wsOrigem.Cells(lastRowSrc, lastCol)).Value
 
-    wsDestino.Range("A2").Resize(lastRowSrc - 1, lastCol).Value = arrData
+    wsDestino.Range("A1").Resize(lastRowSrc, lastCol).Value = arrData
 
     wbOrigem.Close SaveChanges:=False
 End Sub
@@ -233,7 +233,7 @@ Sub AnalisarProcessos()
         If Not found Then
             For j = 1 To lastRowMov - 1
                 If IsDate(dataCredito) And IsDate(arrMov(j, 4)) Then
-                    If CDate(arrMov(j, 4)) <= CDate(dataCredito) Then GoTo ProximoMov
+                    If CDate(arrMov(j, 4)) < CDate(dataCredito) Then GoTo ProximoMov
                 End If
 
                 On Error Resume Next
