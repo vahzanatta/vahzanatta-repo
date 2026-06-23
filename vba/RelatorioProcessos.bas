@@ -1,4 +1,4 @@
-?Attribute VB_Name = "RelatorioProcessos"
+Attribute VB_Name = "RelatorioProcessos"
 Option Explicit
 
 Sub ImportarRelatorios()
