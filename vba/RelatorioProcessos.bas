@@ -195,14 +195,14 @@ Sub AnalisarProcessos()
                 valorEsperado = -creditoUni
             End If
 
-            If valorEsperado <> 0 Then
+            If valorRec <> 0 Or creditoUni <> 0 Then
                 For j = 1 To lastRowResg - 1
                     If IsDate(dataCredito) And IsDate(arrResg(j, 4)) Then
                         If CDate(arrResg(j, 4)) < CDate(dataCredito) Then GoTo ProximoResg1a
                     End If
                     textoResg = Trim(CStr(arrResg(j, 11)))
                     If InStr(1, textoResg, processo, vbTextCompare) > 0 Then
-                        If CDbl(arrResg(j, 8)) = valorEsperado Then
+                        If (valorRec <> 0 And CDbl(arrResg(j, 8)) = -valorRec) Or (creditoUni <> 0 And CDbl(arrResg(j, 8)) = -creditoUni) Then
                             dataResg        = arrResg(j, 4)
                             localizadoEm    = "Resgate"
                             correspondencia = "N?mero do processo"
@@ -230,8 +230,12 @@ ProximoResg1a:
                         retorno         = RetornoComDivergencia(dataCredito, dataResg, "")
                         texto           = textoResg
                         valor           = CDbl(arrResg(j, 8))
-                        If valorEsperado <> 0 And valor <> valorEsperado Then
-                            retorno = retorno & " - divergencia de valor (" & Format(valor, "#,##0.00") & ")"
+                        If (valorRec <> 0 Or creditoUni <> 0) And valor <> -valorRec And valor <> -creditoUni Then
+                            If InStr(1, retorno, " - ") > 0 Then
+                                retorno = retorno & " + divergência de valor (" & Format(valor, "#,##0.00") & ")"
+                            Else
+                                retorno = retorno & " - divergência de valor (" & Format(valor, "#,##0.00") & ")"
+                            End If
                         End If
                         found = True
                         Exit For
@@ -254,7 +258,7 @@ ProximoResg1aDiverg:
                     dataResg        = arrResg(j, 4)
                     localizadoEm    = "Resgate"
                     correspondencia = "Valor recuperado"
-                    retorno         = RetornoComDivergencia(dataCredito, dataResg, "")
+                    retorno         = RetornoComDivergencia(dataCredito, dataResg, "Localizado - sem número de processo vinculado")
                     texto           = Trim(CStr(arrResg(j, 11)))
                     valor           = valorResg
                     found = True
@@ -263,7 +267,7 @@ ProximoResg1aDiverg:
                     dataResg        = arrResg(j, 4)
                     localizadoEm    = "Resgate"
                     correspondencia = "Cr?dito ?nico"
-                    retorno         = RetornoComDivergencia(dataCredito, dataResg, "")
+                    retorno         = RetornoComDivergencia(dataCredito, dataResg, "Localizado - sem número de processo vinculado")
                     texto           = Trim(CStr(arrResg(j, 11)))
                     valor           = valorResg
                     found = True
@@ -287,7 +291,7 @@ ProximoResg1b:
                     dataMov         = arrMov(j, 4)
                     localizadoEm    = "Movimento"
                     correspondencia = "Valor recuperado"
-                    retorno         = RetornoComDivergencia(dataCredito, dataMov, "Localizado ? sem n?mero de processo vinculado")
+                    retorno         = RetornoComDivergencia(dataCredito, dataMov, "Localizado - sem número de processo vinculado")
                     texto           = Trim(CStr(arrMov(j, 11)))
                     valor           = valorMov
                     found = True
@@ -296,7 +300,7 @@ ProximoResg1b:
                     dataMov         = arrMov(j, 4)
                     localizadoEm    = "Movimento"
                     correspondencia = "Cr?dito ?nico"
-                    retorno         = RetornoComDivergencia(dataCredito, dataMov, "Localizado ? sem n?mero de processo vinculado")
+                    retorno         = RetornoComDivergencia(dataCredito, dataMov, "Localizado - sem número de processo vinculado")
                     texto           = Trim(CStr(arrMov(j, 11)))
                     valor           = valorMov
                     found = True
@@ -382,9 +386,9 @@ Private Function RetornoComDivergencia(dataCredito As Variant, dataDoc As Varian
             RetornoComDivergencia = base
         Else
             If prefixo = "" Then
-                RetornoComDivergencia = base & " ? diverg?ncia de " & difDias & " dias"
+                RetornoComDivergencia = base & " - divergência de " & difDias & " dias"
             Else
-                RetornoComDivergencia = base & ", diverg?ncia de " & difDias & " dias"
+                RetornoComDivergencia = base & " + divergência de " & difDias & " dias"
             End If
         End If
     Else
