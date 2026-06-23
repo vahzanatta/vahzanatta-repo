@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual de Uso — RelatorioProcessos</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #222;
+      background: #fff;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 48px 60px;
+    }
+
+    /* ── Capa ── */
+    .capa {
+      text-align: center;
+      padding: 60px 0 40px;
+      border-bottom: 2px solid #1F3864;
+      margin-bottom: 40px;
+    }
+    .capa h1 {
+      font-size: 28px;
+      color: #1F3864;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    .capa .subtitulo {
+      font-size: 15px;
+      color: #555;
+      margin-top: 6px;
+    }
+    .capa .intro {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #444;
+      text-align: justify;
+      max-width: 640px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+
+    /* ── Seções ── */
+    h2 {
+      font-size: 17px;
+      color: #1F3864;
+      font-weight: 700;
+      margin-top: 40px;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+      border-bottom: 1.5px solid #C5D3E8;
+    }
+    h3 {
+      font-size: 13px;
+      color: #2E5FA3;
+      font-weight: 600;
+      margin-top: 22px;
+      margin-bottom: 6px;
+    }
+
+    p { margin-bottom: 10px; text-align: justify; }
+
+    /* ── Listas ── */
+    ul { margin: 6px 0 10px 20px; }
+    ul li { margin-bottom: 4px; }
+    ol { margin: 6px 0 10px 20px; }
+    ol li { margin-bottom: 4px; }
+
+    /* ── Tabelas ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      margin: 12px 0 18px;
+    }
+    thead tr {
+      background: #1F3864;
+      color: #fff;
+    }
+    thead th {
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+    }
+    tbody tr:nth-child(odd)  { background: #fff; }
+    tbody tr:nth-child(even) { background: #EBF0F8; }
+    tbody td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #D8DFE9;
+      vertical-align: top;
+    }
+    tbody td:first-child { white-space: nowrap; font-weight: 600; color: #1F3864; }
+
+    /* ── Destaques ── */
+    .nota {
+      background: #F4F6FB;
+      border-left: 3px solid #2E5FA3;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      color: #444;
+      margin: 10px 0;
+      border-radius: 0 4px 4px 0;
+    }
+    .aviso {
+      background: #FFF3CD;
+      border-left: 3px solid #E8A000;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      color: #7B3F00;
+      margin: 10px 0;
+      border-radius: 0 4px 4px 0;
+    }
+    code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      background: #F4F4F4;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    /* ── Passo a passo numerado ── */
+    .steps { margin: 8px 0 14px; }
+    .steps li {
+      padding: 5px 8px;
+      margin-bottom: 4px;
+      border-radius: 4px;
+    }
+    .steps li:nth-child(odd)  { background: #fff; }
+    .steps li:nth-child(even) { background: #F0F4FA; }
+
+    @media print {
+      body { padding: 20px 30px; }
+      h2 { page-break-after: avoid; }
+      table { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Capa -->
+<div class="capa">
+  <h1>Manual de Uso</h1>
+  <div class="subtitulo">Módulo VBA — Relatório de Processos</div>
+  <p class="intro">
+    Este documento explica como importar e utilizar o módulo <strong>RelatorioProcessos</strong>
+    no Excel. O módulo cruza uma lista de processos recebida via chamado no <strong>VOIZA</strong>
+    contra dois relatórios exportados do SAP — <strong>RESGATES</strong> e <strong>MOVIMENTO</strong> —
+    identificando onde cada processo foi localizado e apontando eventuais divergências de data.
+  </p>
+</div>
+
+<!-- 1. Visão Geral -->
+<h2>1. Visão Geral</h2>
+<p>
+  O módulo recebe um relatório de processos e verifica, para cada linha, se o processo
+  consta nos relatórios SAP de RESGATES ou MOVIMENTO. A busca ocorre em dois estágios:
+  primeiro pelo número do processo no campo Texto do SAP; depois pelo valor financeiro,
+  comparando com o Valor Recuperado e o Crédito Único do processo.
+</p>
+<p>Ao final, três colunas são adicionadas automaticamente à aba <strong>PROCESSOS</strong>:</p>
+<ul>
+  <li><strong>Localizado em</strong> — indica se o processo foi encontrado em <em>Resgate</em>, <em>Movimento</em> ou não foi localizado.</li>
+  <li><strong>Correspondência</strong> — indica o critério usado: <em>Número do processo</em>, <em>Valor recuperado</em> ou <em>Crédito único</em>.</li>
+  <li><strong>Retorno</strong> — informa se está <em>Localizado</em>, se há divergência de data em dias, ou se não foi localizado.</li>
+</ul>
+
+<!-- 2. Estrutura -->
+<h2>2. Estrutura do Arquivo Excel</h2>
+<p>
+  O arquivo deve conter <strong>três abas</strong> com os nomes exatos indicados abaixo
+  (incluindo maiúsculas e minúsculas).
+</p>
+
+<h3>2.1 Aba PROCESSOS — Lista de processos recebida via VOIZA</h3>
+<p>
+  Esta aba é recebida pronta através do chamado aberto no <strong>VOIZA</strong>.
+  A linha 1 deve ser o cabeçalho e os dados devem começar na linha 2.
+  As colunas F, G e H são geradas automaticamente pela macro — não as preencha manualmente.
+</p>
+
+<table>
+  <thead><tr><th>Coluna</th><th>Campo</th><th>Observação</th></tr></thead>
+  <tbody>
+    <tr><td>A</td><td>Processo Localizado</td><td>Número do processo. Usado na busca por texto no SAP.</td></tr>
+    <tr><td>B</td><td>Data do Crédito</td><td>Usada para calcular a divergência de dias.</td></tr>
+    <tr><td>C</td><td>Valor Recuperado</td><td>Comparado com o valor financeiro do SAP.</td></tr>
+    <tr><td>D</td><td>Crédito Único</td><td>Comparado com o valor financeiro do SAP quando Valor Recuperado não bate.</td></tr>
+    <tr><td>E</td><td>Agência e Conta</td><td>Informativo — não utilizado na busca.</td></tr>
+    <tr><td>F</td><td><em>Localizado em</em> ✦ gerada pela macro</td><td>Preenchida automaticamente.</td></tr>
+    <tr><td>G</td><td><em>Correspondência</em> ✦ gerada pela macro</td><td>Preenchida automaticamente.</td></tr>
+    <tr><td>H</td><td><em>Retorno</em> ✦ gerada pela macro</td><td>Preenchida automaticamente.</td></tr>
+  </tbody>
+</table>
+
+<h3>2.2 Abas RESGATES e MOVIMENTO — Relatórios exportados do SAP</h3>
+<p>
+  Estas abas recebem os relatórios exportados da transação <strong>FBL3H</strong> do SAP.
+  Ambas seguem a mesma estrutura: a linha 1 é o cabeçalho e os dados começam na linha 2.
+  O módulo apenas lê essas abas — nenhuma coluna é escrita nelas.
+</p>
+
+<table>
+  <thead><tr><th>Coluna</th><th>Campo</th><th>Observação</th></tr></thead>
+  <tbody>
+    <tr><td>A–C</td><td>Dados diversos</td><td>Lidos pelo módulo mas não utilizados na busca.</td></tr>
+    <tr><td>D</td><td>Data de documento</td><td>Usada para calcular a divergência de dias.</td></tr>
+    <tr><td>E–G</td><td>Dados diversos</td><td>Lidos pelo módulo mas não utilizados na busca.</td></tr>
+    <tr><td>H</td><td>Valor em moeda da empresa</td><td>Comparado com Valor Recuperado e Crédito Único do processo.</td></tr>
+    <tr><td>I–J</td><td>Dados diversos</td><td>Lidos pelo módulo mas não utilizados na busca.</td></tr>
+    <tr><td>K</td><td>Texto</td><td>Usado na busca por número do processo (Estágio 1).</td></tr>
+  </tbody>
+</table>
+
+<!-- 3. Lógica de busca -->
+<h2>3. Lógica de Busca</h2>
+<p>
+  Para cada linha da aba <strong>PROCESSOS</strong>, a macro executa dois estágios em sequência,
+  encerrando assim que uma correspondência é encontrada.
+</p>
+
+<h3>3.1 Estágio 1 — Busca no RESGATES</h3>
+<p>
+  <strong>Passo 1a — Por número do processo:</strong> se a coluna A (Processo Localizado) não estiver em branco,
+  a macro percorre o campo Texto (coluna K) de todas as linhas do RESGATES procurando o número do processo.
+  A comparação é insensível a maiúsculas/minúsculas e aceita o número em qualquer posição do texto.
+  Se encontrado, o Retorno indica <em>Localizado</em> — com divergência de dias caso as datas sejam diferentes.
+</p>
+<p>
+  <strong>Passo 1b — Por valor:</strong> se não localizado no passo anterior, a macro compara o Valor em
+  moeda da empresa (coluna H do RESGATES) com o Valor Recuperado e, na sequência, com o Crédito Único.
+  O Valor Recuperado tem prioridade. Se encontrado, registra a correspondência e calcula a divergência de data.
+</p>
+
+<h3>3.2 Estágio 2 — Busca no MOVIMENTO</h3>
+<p>
+  Executado somente para processos não localizados no Estágio 1. A macro compara o valor financeiro
+  do MOVIMENTO com Valor Recuperado e Crédito Único (mesma prioridade do Passo 1b). Quando localizado,
+  o Retorno indica <em>Localizado — sem número de processo vinculado</em>, acrescido da divergência de
+  dias se houver.
+</p>
+
+<h3>3.3 Divergência de dias</h3>
+<p>
+  Calculada em todos os casos de localização como a diferença absoluta em dias entre a
+  Data do Crédito (coluna B do PROCESSOS) e a Data de documento (coluna D do SAP).
+  Se a Data do Crédito estiver em branco ou inválida, a divergência não é calculada
+  e o Retorno omite essa informação.
+</p>
+
+<h3>3.4 Possíveis valores do Retorno</h3>
+
+<table>
+  <thead><tr><th>Retorno</th><th>Significado</th></tr></thead>
+  <tbody>
+    <tr><td>Localizado</td><td>Processo encontrado no RESGATES, datas iguais.</td></tr>
+    <tr><td>Localizado — divergência de N dias</td><td>Processo encontrado no RESGATES, mas com diferença de N dias entre as datas.</td></tr>
+    <tr><td>Localizado — sem número de processo vinculado</td><td>Encontrado no MOVIMENTO somente por valor, sem o número do processo no texto SAP. Datas iguais.</td></tr>
+    <tr><td>Localizado — sem número de processo vinculado, divergência de N dias</td><td>Encontrado no MOVIMENTO por valor, com diferença de N dias.</td></tr>
+    <tr><td>Não localizado</td><td>O processo não foi encontrado em nenhum dos dois relatórios.</td></tr>
+  </tbody>
+</table>
+
+<!-- 4. Importando o módulo -->
+<h2>4. Como Importar o Módulo VBA</h2>
+<p>
+  Siga os passos abaixo para adicionar o módulo ao seu arquivo Excel.
+  Este procedimento é feito <strong>uma única vez</strong> por arquivo.
+</p>
+<ol class="steps">
+  <li>Abra o arquivo Excel que contém as abas <strong>PROCESSOS</strong>, <strong>RESGATES</strong> e <strong>MOVIMENTO</strong>.</li>
+  <li>Pressione <strong>Alt + F11</strong> para abrir o Editor Visual Basic (VBE).</li>
+  <li>No menu superior do VBE, clique em <strong>Arquivo → Importar Arquivo…</strong></li>
+  <li>Localize e selecione o arquivo <code>RelatorioProcessos.bas</code> e clique em <strong>Abrir</strong>.</li>
+  <li>Confirme que o módulo <strong>RelatorioProcessos</strong> aparece na lista à esquerda (Módulos).</li>
+  <li>Feche o VBE (<strong>Alt + Q</strong> ou clique no X da janela).</li>
+  <li>Salve o arquivo Excel no formato <strong>.xlsm</strong> (Excel com Macros Habilitadas).</li>
+</ol>
+<div class="aviso">
+  Ao abrir o arquivo futuramente, o Excel pode exibir uma barra amarela pedindo para
+  <strong>"Habilitar Conteúdo"</strong>. Clique nesse botão para que as macros funcionem.
+</div>
+
+<!-- 5. Macros -->
+<h2>5. Macros Disponíveis</h2>
+
+<h3>5.1 ImportarRelatorios — importação e análise automática</h3>
+<p>
+  Esta é a macro principal do fluxo de trabalho. Ao ser executada, abre dois diálogos em sequência
+  para que você selecione os arquivos exportados do SAP, importa os dados para as abas
+  <strong>RESGATES</strong> e <strong>MOVIMENTO</strong> e, em seguida, executa a análise automaticamente.
+</p>
+<ol class="steps">
+  <li>Certifique-se de que as abas se chamam exatamente <strong>PROCESSOS</strong>, <strong>RESGATES</strong> e <strong>MOVIMENTO</strong>.</li>
+  <li>Cole os dados recebidos do VOIZA na aba <strong>PROCESSOS</strong> (a partir da linha 2, com cabeçalho na linha 1).</li>
+  <li>Pressione <strong>Alt + F8</strong> para abrir a janela de macros.</li>
+  <li>Selecione <strong>ImportarRelatorios</strong> na lista e clique em <strong>Executar</strong>.</li>
+  <li>Na primeira janela, selecione o arquivo de <strong>RESGATES</strong> exportado do SAP e clique em <strong>Abrir</strong>.</li>
+  <li>Na segunda janela, selecione o arquivo de <strong>MOVIMENTO</strong> exportado do SAP e clique em <strong>Abrir</strong>.</li>
+  <li>Aguarde. Os dados serão importados e a análise será executada automaticamente.</li>
+  <li>Ao final, uma mensagem exibirá o resumo: linhas analisadas, localizadas em Resgate, localizadas em Movimento e não localizadas.</li>
+</ol>
+<div class="nota">
+  A macro <strong>ImportarRelatorios</strong> substitui os dados anteriores das abas RESGATES e MOVIMENTO antes de importar.
+  Não é necessário limpar os dados manualmente antes de utilizá-la.
+</div>
+
+<h3>5.2 AnalisarProcessos — reprocessar sem reimportar</h3>
+<p>
+  Executa a análise diretamente sobre os dados já presentes nas abas RESGATES e MOVIMENTO,
+  sem abrir nenhum diálogo de arquivo. Use quando os relatórios SAP já estiverem importados
+  e você quiser rodar a análise novamente — por exemplo, após corrigir dados na aba PROCESSOS.
+</p>
+<ol class="steps">
+  <li>Pressione <strong>Alt + F8</strong> para abrir a janela de macros.</li>
+  <li>Selecione <strong>AnalisarProcessos</strong> e clique em <strong>Executar</strong>.</li>
+  <li>As colunas F, G e H da aba PROCESSOS serão atualizadas com os resultados.</li>
+</ol>
+
+<h3>5.3 LimparAnalise — limpar resultados</h3>
+<p>
+  Apaga o conteúdo das colunas F, G e H (Localizado em, Correspondência e Retorno) da aba PROCESSOS,
+  incluindo os cabeçalhos. Use para limpar os resultados antes de um reprocessamento manual.
+</p>
+<ol class="steps">
+  <li>Pressione <strong>Alt + F8</strong> para abrir a janela de macros.</li>
+  <li>Selecione <strong>LimparAnalise</strong> e clique em <strong>Executar</strong>.</li>
+  <li>As colunas F, G e H serão apagadas. Execute <strong>AnalisarProcessos</strong> para reprocessar.</li>
+</ol>
+
+<!-- 6. Exportação do SAP -->
+<h2>6. Exportando os Relatórios do SAP</h2>
+<p>
+  Os relatórios de RESGATES e MOVIMENTO são gerados na transação <strong>FBL3H</strong>,
+  utilizando o layout <strong>/AGING</strong>. São necessárias duas exportações separadas:
+  uma para cada relatório, variando apenas a conta ou o filtro aplicado.
+</p>
+
+<h3>6.1 Passo a passo para exportação</h3>
+<ol class="steps">
+  <li>Acesse a transação <strong>FBL3H</strong> no SAP.</li>
+  <li>Configure os filtros desejados (conta específica para RESGATES; relatório geral para MOVIMENTO).</li>
+  <li>Aplique o layout <strong>/AGING</strong>: clique no ícone de layout (ou menu <em>Configurações → Layouts → Carregar</em>) e selecione <strong>/AGING</strong>.</li>
+  <li>Execute o relatório (<strong>F8</strong>).</li>
+  <li>Clique com o <strong>botão direito</strong> sobre o relatório e selecione <em>Exportar como → Planilha eletrônica → Formato Microsoft Excel (*.xlsx)</em>.</li>
+  <li>Salve o arquivo em um local de fácil acesso.</li>
+  <li>Repita os passos para o segundo relatório.</li>
+</ol>
+
+<div class="aviso">
+  Utilize <strong>sempre</strong> o layout <strong>/AGING</strong>. Outros layouts podem gerar colunas em ordem diferente,
+  fazendo com que a macro leia campos incorretos e produza resultados errados.
+</div>
+
+<!-- 7. Mensagens -->
+<h2>7. Mensagens e Situações Comuns</h2>
+
+<table>
+  <thead><tr><th>Mensagem / Situação</th><th>Causa</th><th>Solução</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Aba 'PROCESSOS' não encontrada</td>
+      <td>A aba com os processos não existe ou tem nome diferente.</td>
+      <td>Renomeie a aba para <strong>PROCESSOS</strong> (exatamente, com maiúsculas).</td>
+    </tr>
+    <tr>
+      <td>Aba 'RESGATES' não encontrada</td>
+      <td>A aba de resgates não existe ou tem nome diferente.</td>
+      <td>Renomeie a aba para <strong>RESGATES</strong> (exatamente, com maiúsculas).</td>
+    </tr>
+    <tr>
+      <td>Aba 'MOVIMENTO' não encontrada</td>
+      <td>A aba de movimento não existe ou tem nome diferente.</td>
+      <td>Renomeie a aba para <strong>MOVIMENTO</strong> (exatamente, com maiúsculas).</td>
+    </tr>
+    <tr>
+      <td>Nenhum dado encontrado na aba 'PROCESSOS'</td>
+      <td>A aba PROCESSOS está vazia ou só tem o cabeçalho.</td>
+      <td>Cole os dados recebidos do VOIZA na aba PROCESSOS a partir da linha 2.</td>
+    </tr>
+    <tr>
+      <td>O arquivo selecionado para 'RESGATES' não contém dados a partir da linha 2</td>
+      <td>O arquivo SAP selecionado para RESGATES está vazio ou só tem o cabeçalho.</td>
+      <td>Verifique se o arquivo exportado do SAP está correto.</td>
+    </tr>
+    <tr>
+      <td>O arquivo selecionado para 'MOVIMENTO' não contém dados a partir da linha 2</td>
+      <td>O arquivo SAP selecionado para MOVIMENTO está vazio ou só tem o cabeçalho.</td>
+      <td>Verifique se o arquivo exportado do SAP está correto.</td>
+    </tr>
+    <tr>
+      <td>Coluna Retorno com "Não localizado"</td>
+      <td>O processo não foi encontrado em RESGATES nem em MOVIMENTO, nem por número nem por valor.</td>
+      <td>Verifique se os relatórios SAP corretos foram importados e se os valores na aba PROCESSOS estão preenchidos.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- 8. Fluxo -->
+<h2>8. Fluxo Resumido de Uso</h2>
+<p>Siga este fluxo sempre que receber um novo chamado no VOIZA:</p>
+<ol class="steps">
+  <li>Abra o chamado no <strong>VOIZA</strong> e copie os dados de processos para a aba <strong>PROCESSOS</strong> (linha 1 = cabeçalho, dados a partir da linha 2).</li>
+  <li>Exporte os dois relatórios da transação <strong>FBL3H</strong> do SAP usando o layout <strong>/AGING</strong>: um para RESGATES e um para MOVIMENTO.</li>
+  <li>No Excel, execute <strong>ImportarRelatorios</strong> e selecione os dois arquivos exportados quando solicitado.</li>
+  <li>Os dados serão importados e a análise ocorrerá automaticamente.</li>
+  <li>Revise as linhas com <strong>Retorno = "Não localizado"</strong> na coluna H e verifique se os arquivos SAP importados estão corretos.</li>
+  <li>Se necessário, corrija os dados e execute <strong>AnalisarProcessos</strong> para reprocessar sem reimportar.</li>
+</ol>
+
+</body>
+</html>
