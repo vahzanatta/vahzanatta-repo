@@ -5,14 +5,20 @@ Sub ImportarRelatorios()
     Dim arquivoResg As Variant
     Dim arquivoMov  As Variant
 
+    MsgBox "Selecione o relatório de RESGATES." & vbCrLf & _
+           "(Exportado do SAP — contém os resgates do período)", _
+           vbInformation, "Passo 1 de 2"
     arquivoResg = Application.GetOpenFilename( _
         FileFilter:="Excel (*.xlsx; *.xlsm; *.xls), *.xlsx; *.xlsm; *.xls", _
-        Title:="Selecione o relatório de RESGATES")
+        Title:="Passo 1/2 — Selecione o relatório de RESGATES")
     If arquivoResg = False Then Exit Sub
 
+    MsgBox "Selecione o relatório de MOVIMENTO." & vbCrLf & _
+           "(Exportado do SAP — contém o movimento financeiro do período)", _
+           vbInformation, "Passo 2 de 2"
     arquivoMov = Application.GetOpenFilename( _
         FileFilter:="Excel (*.xlsx; *.xlsm; *.xls), *.xlsx; *.xlsm; *.xls", _
-        Title:="Selecione o relatório de MOVIMENTO")
+        Title:="Passo 2/2 — Selecione o relatório de MOVIMENTO")
     If arquivoMov = False Then Exit Sub
 
     On Error GoTo ErrHandler
@@ -45,7 +51,14 @@ Private Sub ImportarParaAba(arquivo As Variant, nomeAba As String)
 
     Set wbOrigem  = Workbooks.Open(Filename:=arquivo, ReadOnly:=True, UpdateLinks:=False)
     Set wsOrigem  = wbOrigem.Worksheets(1)
+
+    On Error Resume Next
     Set wsDestino = ThisWorkbook.Worksheets(nomeAba)
+    On Error GoTo 0
+    If wsDestino Is Nothing Then
+        Set wsDestino = ThisWorkbook.Worksheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
+        wsDestino.Name = nomeAba
+    End If
 
     lastRowSrc = wsOrigem.Cells(wsOrigem.Rows.Count, "A").End(xlUp).Row
 
@@ -169,8 +182,6 @@ Sub AnalisarProcessos()
         retorno         = ""
         found           = False
 
-        ' Estágio 1 — RESGATES
-        ' Passo 1a: por número do processo
         If processo <> "" Then
             For j = 1 To lastRowResg - 1
                 textoResg = Trim(CStr(arrResg(j, 11)))
@@ -185,7 +196,6 @@ Sub AnalisarProcessos()
             Next j
         End If
 
-        ' Passo 1b: por valor no RESGATES
         If Not found Then
             For j = 1 To lastRowResg - 1
                 On Error Resume Next
@@ -210,7 +220,6 @@ Sub AnalisarProcessos()
             Next j
         End If
 
-        ' Estágio 2 — MOVIMENTO
         If Not found Then
             For j = 1 To lastRowMov - 1
                 On Error Resume Next
