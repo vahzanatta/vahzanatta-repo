@@ -188,32 +188,57 @@ Sub AnalisarProcessos()
         found           = False
 
         If processo <> "" Then
-            For j = 1 To lastRowResg - 1
-                If IsDate(dataCredito) And IsDate(arrResg(j, 4)) Then
-                    If CDate(arrResg(j, 4)) < CDate(dataCredito) Then GoTo ProximoResg1a
-                End If
-                textoResg = Trim(CStr(arrResg(j, 11)))
-                If InStr(1, textoResg, processo, vbTextCompare) > 0 Then
-                    dataResg        = arrResg(j, 4)
-                    localizadoEm    = "Resgate"
-                    correspondencia = "N?mero do processo"
-                    retorno         = RetornoComDivergencia(dataCredito, dataResg, "")
-                    texto           = textoResg
-                    valor           = CDbl(arrResg(j, 8))
-                    valorEsperado = 0
-                    If valorRec <> 0 Then
-                        valorEsperado = -valorRec
-                    ElseIf creditoUni <> 0 Then
-                        valorEsperado = -creditoUni
+            valorEsperado = 0
+            If valorRec <> 0 Then
+                valorEsperado = -valorRec
+            ElseIf creditoUni <> 0 Then
+                valorEsperado = -creditoUni
+            End If
+
+            If valorEsperado <> 0 Then
+                For j = 1 To lastRowResg - 1
+                    If IsDate(dataCredito) And IsDate(arrResg(j, 4)) Then
+                        If CDate(arrResg(j, 4)) < CDate(dataCredito) Then GoTo ProximoResg1a
                     End If
-                    If valorEsperado <> 0 And valor <> valorEsperado Then
-                        retorno = retorno & " - divergencia de valor (" & Format(valor, "#,##0.00") & ")"
+                    textoResg = Trim(CStr(arrResg(j, 11)))
+                    If InStr(1, textoResg, processo, vbTextCompare) > 0 Then
+                        If CDbl(arrResg(j, 8)) = valorEsperado Then
+                            dataResg        = arrResg(j, 4)
+                            localizadoEm    = "Resgate"
+                            correspondencia = "N?mero do processo"
+                            retorno         = RetornoComDivergencia(dataCredito, dataResg, "")
+                            texto           = textoResg
+                            valor           = CDbl(arrResg(j, 8))
+                            found = True
+                            Exit For
+                        End If
                     End If
-                    found = True
-                    Exit For
-                End If
 ProximoResg1a:
-            Next j
+                Next j
+            End If
+
+            If Not found Then
+                For j = 1 To lastRowResg - 1
+                    If IsDate(dataCredito) And IsDate(arrResg(j, 4)) Then
+                        If CDate(arrResg(j, 4)) < CDate(dataCredito) Then GoTo ProximoResg1aDiverg
+                    End If
+                    textoResg = Trim(CStr(arrResg(j, 11)))
+                    If InStr(1, textoResg, processo, vbTextCompare) > 0 Then
+                        dataResg        = arrResg(j, 4)
+                        localizadoEm    = "Resgate"
+                        correspondencia = "N?mero do processo"
+                        retorno         = RetornoComDivergencia(dataCredito, dataResg, "")
+                        texto           = textoResg
+                        valor           = CDbl(arrResg(j, 8))
+                        If valorEsperado <> 0 And valor <> valorEsperado Then
+                            retorno = retorno & " - divergencia de valor (" & Format(valor, "#,##0.00") & ")"
+                        End If
+                        found = True
+                        Exit For
+                    End If
+ProximoResg1aDiverg:
+                Next j
+            End If
         End If
 
         If Not found Then
