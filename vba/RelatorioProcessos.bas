@@ -208,7 +208,7 @@ Sub AnalisarProcessos()
                 valorResg = CDbl(arrResg(j, 8))
                 On Error GoTo ErrHandler
 
-                If valorRec <> 0 And valorResg = valorRec Then
+                If valorRec <> 0 And valorResg = -valorRec Then
                     dataResg        = arrResg(j, 4)
                     localizadoEm    = "Resgate"
                     correspondencia = "Valor recuperado"
@@ -217,7 +217,7 @@ Sub AnalisarProcessos()
                     valor           = valorResg
                     found = True
                     Exit For
-                ElseIf creditoUni <> 0 And valorResg = creditoUni Then
+                ElseIf creditoUni <> 0 And valorResg = -creditoUni Then
                     dataResg        = arrResg(j, 4)
                     localizadoEm    = "Resgate"
                     correspondencia = "Crédito único"
