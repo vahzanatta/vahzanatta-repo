@@ -188,6 +188,9 @@ Sub AnalisarProcessos()
 
         If processo <> "" Then
             For j = 1 To lastRowResg - 1
+                If IsDate(dataCredito) And IsDate(arrResg(j, 4)) Then
+                    If CDate(arrResg(j, 4)) < CDate(dataCredito) Then GoTo ProximoResg1a
+                End If
                 textoResg = Trim(CStr(arrResg(j, 11)))
                 If InStr(1, textoResg, processo, vbTextCompare) > 0 Then
                     dataResg        = arrResg(j, 4)
@@ -199,11 +202,15 @@ Sub AnalisarProcessos()
                     found = True
                     Exit For
                 End If
+ProximoResg1a:
             Next j
         End If
 
         If Not found Then
             For j = 1 To lastRowResg - 1
+                If IsDate(dataCredito) And IsDate(arrResg(j, 4)) Then
+                    If CDate(arrResg(j, 4)) < CDate(dataCredito) Then GoTo ProximoResg1b
+                End If
                 On Error Resume Next
                 valorResg = CDbl(arrResg(j, 8))
                 On Error GoTo ErrHandler
@@ -227,6 +234,7 @@ Sub AnalisarProcessos()
                     found = True
                     Exit For
                 End If
+ProximoResg1b:
             Next j
         End If
 
