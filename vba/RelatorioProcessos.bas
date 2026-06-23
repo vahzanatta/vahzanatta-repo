@@ -232,6 +232,10 @@ Sub AnalisarProcessos()
 
         If Not found Then
             For j = 1 To lastRowMov - 1
+                If IsDate(dataCredito) And IsDate(arrMov(j, 4)) Then
+                    If CDate(arrMov(j, 4)) <= CDate(dataCredito) Then GoTo ProximoMov
+                End If
+
                 On Error Resume Next
                 valorMov = CDbl(arrMov(j, 8))
                 On Error GoTo ErrHandler
@@ -255,6 +259,7 @@ Sub AnalisarProcessos()
                     found = True
                     Exit For
                 End If
+ProximoMov:
             Next j
         End If
 
@@ -328,9 +333,8 @@ Private Function RetornoComDivergencia(dataCredito As Variant, dataDoc As Varian
         base = prefixo
     End If
 
-    If IsDate(dataCredito) And CStr(dataCredito) <> "" And _
-       IsDate(dataDoc) And CStr(dataDoc) <> "" Then
-        difDias = Abs(CLng(CDate(dataDoc)) - CLng(CDate(dataCredito)))
+    If IsDate(dataCredito) And IsDate(dataDoc) Then
+        difDias = Abs(DateDiff("d", CDate(dataCredito), CDate(dataDoc)))
         If difDias = 0 Then
             RetornoComDivergencia = base
         Else
