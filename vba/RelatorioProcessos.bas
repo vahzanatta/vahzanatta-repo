@@ -5,20 +5,20 @@ Sub ImportarRelatorios()
     Dim arquivoResg As Variant
     Dim arquivoMov  As Variant
 
-    MsgBox "Selecione o relatório de RESGATES." & vbCrLf & _
-           "(Exportado do SAP — contém os resgates do período)", _
+    MsgBox "Selecione o relat?rio de RESGATES." & vbCrLf & _
+           "(Exportado do SAP ? cont?m os resgates do per?odo)", _
            vbInformation, "Passo 1 de 2"
     arquivoResg = Application.GetOpenFilename( _
         FileFilter:="Excel (*.xlsx; *.xlsm; *.xls), *.xlsx; *.xlsm; *.xls", _
-        Title:="Passo 1/2 — Selecione o relatório de RESGATES")
+        Title:="Passo 1/2 ? Selecione o relat?rio de RESGATES")
     If arquivoResg = False Then Exit Sub
 
-    MsgBox "Selecione o relatório de MOVIMENTO." & vbCrLf & _
-           "(Exportado do SAP — contém o movimento financeiro do período)", _
+    MsgBox "Selecione o relat?rio de MOVIMENTO." & vbCrLf & _
+           "(Exportado do SAP ? cont?m o movimento financeiro do per?odo)", _
            vbInformation, "Passo 2 de 2"
     arquivoMov = Application.GetOpenFilename( _
         FileFilter:="Excel (*.xlsx; *.xlsm; *.xls), *.xlsx; *.xlsm; *.xls", _
-        Title:="Passo 2/2 — Selecione o relatório de MOVIMENTO")
+        Title:="Passo 2/2 ? Selecione o relat?rio de MOVIMENTO")
     If arquivoMov = False Then Exit Sub
 
     On Error GoTo ErrHandler
@@ -64,7 +64,7 @@ Private Sub ImportarParaAba(arquivo As Variant, nomeAba As String)
 
     If lastRowSrc < 2 Then
         wbOrigem.Close SaveChanges:=False
-        MsgBox "O arquivo selecionado para '" & nomeAba & "' não contém dados a partir da linha 2.", vbExclamation, "Arquivo vazio"
+        MsgBox "O arquivo selecionado para '" & nomeAba & "' n?o cont?m dados a partir da linha 2.", vbExclamation, "Arquivo vazio"
         Exit Sub
     End If
 
@@ -92,15 +92,15 @@ Sub AnalisarProcessos()
     On Error GoTo ErrHandler
 
     If wsProc Is Nothing Then
-        MsgBox "Aba 'PROCESSOS' não encontrada.", vbCritical, "Erro"
+        MsgBox "Aba 'PROCESSOS' n?o encontrada.", vbCritical, "Erro"
         Exit Sub
     End If
     If wsResg Is Nothing Then
-        MsgBox "Aba 'RESGATES' não encontrada.", vbCritical, "Erro"
+        MsgBox "Aba 'RESGATES' n?o encontrada.", vbCritical, "Erro"
         Exit Sub
     End If
     If wsMov Is Nothing Then
-        MsgBox "Aba 'MOVIMENTO' não encontrada.", vbCritical, "Erro"
+        MsgBox "Aba 'MOVIMENTO' n?o encontrada.", vbCritical, "Erro"
         Exit Sub
     End If
 
@@ -166,7 +166,8 @@ Sub AnalisarProcessos()
     Dim texto           As String
     Dim valor           As Double
     Dim difDias As Long
-    Dim found   As Boolean
+    Dim found          As Boolean
+    Dim valorEsperado  As Double
 
     For i = 1 To totalRows
         processo   = Trim(CStr(arrProc(i, 1)))
@@ -187,23 +188,61 @@ Sub AnalisarProcessos()
         found           = False
 
         If processo <> "" Then
-            For j = 1 To lastRowResg - 1
-                If IsDate(dataCredito) And IsDate(arrResg(j, 4)) Then
-                    If CDate(arrResg(j, 4)) < CDate(dataCredito) Then GoTo ProximoResg1a
-                End If
-                textoResg = Trim(CStr(arrResg(j, 11)))
-                If InStr(1, textoResg, processo, vbTextCompare) > 0 Then
-                    dataResg        = arrResg(j, 4)
-                    localizadoEm    = "Resgate"
-                    correspondencia = "Número do processo"
-                    retorno         = RetornoComDivergencia(dataCredito, dataResg, "")
-                    texto           = textoResg
-                    valor           = CDbl(arrResg(j, 8))
-                    found = True
-                    Exit For
-                End If
+            valorEsperado = 0
+            If valorRec <> 0 Then
+                valorEsperado = -valorRec
+            ElseIf creditoUni <> 0 Then
+                valorEsperado = -creditoUni
+            End If
+
+            If valorRec <> 0 Or creditoUni <> 0 Then
+                For j = 1 To lastRowResg - 1
+                    If IsDate(dataCredito) And IsDate(arrResg(j, 4)) Then
+                        If CDate(arrResg(j, 4)) < CDate(dataCredito) Then GoTo ProximoResg1a
+                    End If
+                    textoResg = Trim(CStr(arrResg(j, 11)))
+                    If InStr(1, textoResg, processo, vbTextCompare) > 0 Then
+                        If (valorRec <> 0 And CDbl(arrResg(j, 8)) = -valorRec) Or (creditoUni <> 0 And CDbl(arrResg(j, 8)) = -creditoUni) Then
+                            dataResg        = arrResg(j, 4)
+                            localizadoEm    = "Resgate"
+                            correspondencia = "N?mero do processo"
+                            retorno         = RetornoComDivergencia(dataCredito, dataResg, "")
+                            texto           = textoResg
+                            valor           = CDbl(arrResg(j, 8))
+                            found = True
+                            Exit For
+                        End If
+                    End If
 ProximoResg1a:
-            Next j
+                Next j
+            End If
+
+            If Not found Then
+                For j = 1 To lastRowResg - 1
+                    If IsDate(dataCredito) And IsDate(arrResg(j, 4)) Then
+                        If CDate(arrResg(j, 4)) < CDate(dataCredito) Then GoTo ProximoResg1aDiverg
+                    End If
+                    textoResg = Trim(CStr(arrResg(j, 11)))
+                    If InStr(1, textoResg, processo, vbTextCompare) > 0 Then
+                        dataResg        = arrResg(j, 4)
+                        localizadoEm    = "Resgate"
+                        correspondencia = "N?mero do processo"
+                        retorno         = RetornoComDivergencia(dataCredito, dataResg, "")
+                        texto           = textoResg
+                        valor           = CDbl(arrResg(j, 8))
+                        If (valorRec <> 0 Or creditoUni <> 0) And valor <> -valorRec And valor <> -creditoUni Then
+                            If InStr(1, retorno, " - ") > 0 Then
+                                retorno = retorno & " + divergência de valor (" & Format(valor, "#,##0.00") & ")"
+                            Else
+                                retorno = retorno & " - divergência de valor (" & Format(valor, "#,##0.00") & ")"
+                            End If
+                        End If
+                        found = True
+                        Exit For
+                    End If
+ProximoResg1aDiverg:
+                Next j
+            End If
         End If
 
         If Not found Then
@@ -219,7 +258,7 @@ ProximoResg1a:
                     dataResg        = arrResg(j, 4)
                     localizadoEm    = "Resgate"
                     correspondencia = "Valor recuperado"
-                    retorno         = RetornoComDivergencia(dataCredito, dataResg, "")
+                    retorno         = RetornoComDivergencia(dataCredito, dataResg, "Localizado - sem número de processo vinculado")
                     texto           = Trim(CStr(arrResg(j, 11)))
                     valor           = valorResg
                     found = True
@@ -227,8 +266,8 @@ ProximoResg1a:
                 ElseIf creditoUni <> 0 And valorResg = -creditoUni Then
                     dataResg        = arrResg(j, 4)
                     localizadoEm    = "Resgate"
-                    correspondencia = "Crédito único"
-                    retorno         = RetornoComDivergencia(dataCredito, dataResg, "")
+                    correspondencia = "Cr?dito ?nico"
+                    retorno         = RetornoComDivergencia(dataCredito, dataResg, "Localizado - sem número de processo vinculado")
                     texto           = Trim(CStr(arrResg(j, 11)))
                     valor           = valorResg
                     found = True
@@ -252,7 +291,7 @@ ProximoResg1b:
                     dataMov         = arrMov(j, 4)
                     localizadoEm    = "Movimento"
                     correspondencia = "Valor recuperado"
-                    retorno         = RetornoComDivergencia(dataCredito, dataMov, "Localizado — sem número de processo vinculado")
+                    retorno         = RetornoComDivergencia(dataCredito, dataMov, "Localizado - sem número de processo vinculado")
                     texto           = Trim(CStr(arrMov(j, 11)))
                     valor           = valorMov
                     found = True
@@ -260,8 +299,8 @@ ProximoResg1b:
                 ElseIf creditoUni <> 0 And valorMov = creditoUni Then
                     dataMov         = arrMov(j, 4)
                     localizadoEm    = "Movimento"
-                    correspondencia = "Crédito único"
-                    retorno         = RetornoComDivergencia(dataCredito, dataMov, "Localizado — sem número de processo vinculado")
+                    correspondencia = "Cr?dito ?nico"
+                    retorno         = RetornoComDivergencia(dataCredito, dataMov, "Localizado - sem número de processo vinculado")
                     texto           = Trim(CStr(arrMov(j, 11)))
                     valor           = valorMov
                     found = True
@@ -274,7 +313,7 @@ ProximoMov:
         If Not found Then
             localizadoEm    = ""
             correspondencia = ""
-            retorno         = "Não localizado"
+            retorno         = "N?o localizado"
             totalNaoLoc     = totalNaoLoc + 1
         ElseIf localizadoEm = "Resgate" Then
             totalResg = totalResg + 1
@@ -290,7 +329,7 @@ ProximoMov:
     Next i
 
     wsProc.Cells(1, 6).Value = "Localizado em"
-    wsProc.Cells(1, 7).Value = "Correspondência"
+    wsProc.Cells(1, 7).Value = "Correspond?ncia"
     wsProc.Cells(1, 8).Value = "Retorno"
     wsProc.Cells(1, 9).Value = "Texto"
     wsProc.Cells(1, 10).Value = "Valor"
@@ -300,12 +339,12 @@ ProximoMov:
     Application.ScreenUpdating = True
     Application.Calculation    = xlCalculationAutomatic
 
-    MsgBox "Concluído!" & vbCrLf & vbCrLf & _
+    MsgBox "Conclu?do!" & vbCrLf & vbCrLf & _
            "Linhas analisadas:        " & totalRows & vbCrLf & _
            "Localizados em Resgate:   " & totalResg & vbCrLf & _
            "Localizados em Movimento: " & totalMov & vbCrLf & _
-           "Não localizados:          " & totalNaoLoc, _
-           vbInformation, "Processamento Concluído"
+           "N?o localizados:          " & totalNaoLoc, _
+           vbInformation, "Processamento Conclu?do"
     Exit Sub
 
 ErrHandler:
@@ -347,9 +386,9 @@ Private Function RetornoComDivergencia(dataCredito As Variant, dataDoc As Varian
             RetornoComDivergencia = base
         Else
             If prefixo = "" Then
-                RetornoComDivergencia = base & " — divergência de " & difDias & " dias"
+                RetornoComDivergencia = base & " - divergência de " & difDias & " dias"
             Else
-                RetornoComDivergencia = base & ", divergência de " & difDias & " dias"
+                RetornoComDivergencia = base & " + divergência de " & difDias & " dias"
             End If
         End If
     Else

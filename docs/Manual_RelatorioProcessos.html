@@ -153,7 +153,7 @@
     Este documento explica como importar e utilizar o módulo <strong>RelatorioProcessos</strong>
     no Excel. O módulo cruza uma lista de processos recebida via chamado no <strong>VOIZA</strong>
     contra dois relatórios exportados do SAP — <strong>RESGATES</strong> e <strong>MOVIMENTO</strong> —
-    identificando onde cada processo foi localizado e apontando eventuais divergências de data.
+    identificando onde cada processo foi localizado e apontando eventuais divergências de data e de valor.
   </p>
 </div>
 
@@ -161,42 +161,55 @@
 <h2>1. Visão Geral</h2>
 <p>
   O módulo recebe um relatório de processos e verifica, para cada linha, se o processo
-  consta nos relatórios SAP de RESGATES ou MOVIMENTO. A busca ocorre em dois estágios:
-  primeiro pelo número do processo no campo Texto do SAP; depois pelo valor financeiro,
-  comparando com o Valor Recuperado e o Crédito Único do processo.
+  consta nos relatórios SAP de RESGATES ou MOVIMENTO. A busca ocorre em múltiplos estágios,
+  com prioridade para correspondências exatas (número do processo e valor coincidentes),
+  aceitando correspondências parciais apenas quando a busca exata falha.
 </p>
-<p>Ao final, três colunas são adicionadas automaticamente à aba <strong>PROCESSOS</strong>:</p>
+<p>Ao final, cinco colunas são adicionadas automaticamente à aba <strong>PROCESSOS</strong>:</p>
 <ul>
   <li><strong>Localizado em</strong> — indica se o processo foi encontrado em <em>Resgate</em>, <em>Movimento</em> ou não foi localizado.</li>
   <li><strong>Correspondência</strong> — indica o critério usado: <em>Número do processo</em>, <em>Valor recuperado</em> ou <em>Crédito único</em>.</li>
-  <li><strong>Retorno</strong> — informa se está <em>Localizado</em>, se há divergência de data em dias, ou se não foi localizado.</li>
+  <li><strong>Retorno</strong> — informa o resultado detalhado: se está localizado, se há divergências de data ou de valor, e se há número de processo vinculado no SAP.</li>
+  <li><strong>Texto</strong> — conteúdo do campo Texto da linha encontrada no SAP.</li>
+  <li><strong>Valor</strong> — valor financeiro da linha encontrada no SAP.</li>
 </ul>
 
 <!-- 2. Estrutura -->
 <h2>2. Estrutura do Arquivo Excel</h2>
 <p>
-  O arquivo deve conter <strong>três abas</strong> com os nomes exatos indicados abaixo
-  (incluindo maiúsculas e minúsculas).
+  O arquivo deve conter obrigatoriamente a aba <strong>PROCESSOS</strong>. As abas
+  <strong>RESGATES</strong> e <strong>MOVIMENTO</strong> são criadas automaticamente pela macro
+  <strong>ImportarRelatorios</strong> caso ainda não existam.
 </p>
 
 <h3>2.1 Aba PROCESSOS — Lista de processos recebida via VOIZA</h3>
 <p>
-  Esta aba é recebida pronta através do chamado aberto no <strong>VOIZA</strong>.
+  A planilha é recebida através do chamado aberto no <strong>VOIZA</strong>. Ao abri-la, renomeie
+  a aba principal para <strong>PROCESSOS</strong> antes de executar qualquer macro.
   A linha 1 deve ser o cabeçalho e os dados devem começar na linha 2.
-  As colunas F, G e H são geradas automaticamente pela macro — não as preencha manualmente.
+  As colunas F a J são geradas automaticamente pela macro — não as preencha manualmente.
 </p>
+<div class="aviso">
+  <strong>Atenção — ajuste obrigatório antes de executar a macro:</strong> a planilha recebida no VOIZA
+  geralmente contém colunas extras além das necessárias. Antes de rodar a macro, exclua todas as colunas
+  que não sejam as listadas na tabela abaixo, mantendo apenas as colunas A (Processo Localizado),
+  B (Data do Crédito), C (Valor Recuperado), D (Crédito Único) e E (Agência e Conta), nessa ordem.
+  Colunas fora dessa estrutura fazem com que a macro leia campos incorretos e produza resultados errados.
+</div>
 
 <table>
   <thead><tr><th>Coluna</th><th>Campo</th><th>Observação</th></tr></thead>
   <tbody>
     <tr><td>A</td><td>Processo Localizado</td><td>Número do processo. Usado na busca por texto no SAP.</td></tr>
-    <tr><td>B</td><td>Data do Crédito</td><td>Usada para calcular a divergência de dias.</td></tr>
-    <tr><td>C</td><td>Valor Recuperado</td><td>Comparado com o valor financeiro do SAP.</td></tr>
-    <tr><td>D</td><td>Crédito Único</td><td>Comparado com o valor financeiro do SAP quando Valor Recuperado não bate.</td></tr>
+    <tr><td>B</td><td>Data do Crédito</td><td>Usada para calcular a divergência de dias e como filtro mínimo de data.</td></tr>
+    <tr><td>C</td><td>Valor Recuperado</td><td>Comparado com o valor financeiro do SAP na busca por número do processo e na busca por valor.</td></tr>
+    <tr><td>D</td><td>Crédito Único</td><td>Comparado com o valor financeiro do SAP quando Valor Recuperado não corresponde.</td></tr>
     <tr><td>E</td><td>Agência e Conta</td><td>Informativo — não utilizado na busca.</td></tr>
     <tr><td>F</td><td><em>Localizado em</em> ✦ gerada pela macro</td><td>Preenchida automaticamente.</td></tr>
     <tr><td>G</td><td><em>Correspondência</em> ✦ gerada pela macro</td><td>Preenchida automaticamente.</td></tr>
     <tr><td>H</td><td><em>Retorno</em> ✦ gerada pela macro</td><td>Preenchida automaticamente.</td></tr>
+    <tr><td>I</td><td><em>Texto</em> ✦ gerada pela macro</td><td>Preenchida automaticamente.</td></tr>
+    <tr><td>J</td><td><em>Valor</em> ✦ gerada pela macro</td><td>Preenchida automaticamente.</td></tr>
   </tbody>
 </table>
 
@@ -211,60 +224,117 @@
   <thead><tr><th>Coluna</th><th>Campo</th><th>Observação</th></tr></thead>
   <tbody>
     <tr><td>A–C</td><td>Dados diversos</td><td>Lidos pelo módulo mas não utilizados na busca.</td></tr>
-    <tr><td>D</td><td>Data de documento</td><td>Usada para calcular a divergência de dias.</td></tr>
+    <tr><td>D</td><td>Data de documento</td><td>Filtrada (deve ser ≥ Data do Crédito do processo) e usada para calcular divergência de dias.</td></tr>
     <tr><td>E–G</td><td>Dados diversos</td><td>Lidos pelo módulo mas não utilizados na busca.</td></tr>
-    <tr><td>H</td><td>Valor em moeda da empresa</td><td>Comparado com Valor Recuperado e Crédito Único do processo.</td></tr>
+    <tr><td>H</td><td>Valor em moeda da empresa</td><td>Comparado com Valor Recuperado e Crédito Único. Nos RESGATES o valor é negativo (saída); no MOVIMENTO é positivo.</td></tr>
     <tr><td>I–J</td><td>Dados diversos</td><td>Lidos pelo módulo mas não utilizados na busca.</td></tr>
-    <tr><td>K</td><td>Texto</td><td>Usado na busca por número do processo (Estágio 1).</td></tr>
+    <tr><td>K</td><td>Texto</td><td>Usado na busca por número do processo.</td></tr>
   </tbody>
 </table>
 
 <!-- 3. Lógica de busca -->
 <h2>3. Lógica de Busca</h2>
 <p>
-  Para cada linha da aba <strong>PROCESSOS</strong>, a macro executa dois estágios em sequência,
-  encerrando assim que uma correspondência é encontrada.
+  Para cada linha da aba <strong>PROCESSOS</strong>, a macro executa os passos abaixo em sequência,
+  encerrando assim que uma correspondência é encontrada. Em todos os passos,
+  linhas do SAP cuja data de documento seja <strong>anterior</strong> à Data do Crédito do processo são ignoradas.
 </p>
 
-<h3>3.1 Estágio 1 — Busca no RESGATES</h3>
+<h3>3.1 Passo 1 — Número do processo + valor exato no RESGATES</h3>
 <p>
-  <strong>Passo 1a — Por número do processo:</strong> se a coluna A (Processo Localizado) não estiver em branco,
-  a macro percorre o campo Texto (coluna K) de todas as linhas do RESGATES procurando o número do processo.
-  A comparação é insensível a maiúsculas/minúsculas e aceita o número em qualquer posição do texto.
-  Se encontrado, o Retorno indica <em>Localizado</em> — com divergência de dias caso as datas sejam diferentes.
+  Executado quando a coluna A (Processo Localizado) não está em branco <strong>e</strong> ao menos um
+  dos campos de valor (Valor Recuperado ou Crédito Único) está preenchido.
+  A macro percorre o campo Texto (coluna K) do RESGATES procurando o número do processo
+  (busca insensível a maiúsculas, aceita o número em qualquer posição do texto) <strong>e</strong>
+  exige que o valor financeiro da linha (coluna H) coincida exatamente com o negativo do
+  Valor Recuperado ou do Crédito Único.
 </p>
 <p>
-  <strong>Passo 1b — Por valor:</strong> se não localizado no passo anterior, a macro compara o Valor em
-  moeda da empresa (coluna H do RESGATES) com o Valor Recuperado e, na sequência, com o Crédito Único.
-  O Valor Recuperado tem prioridade. Se encontrado, registra a correspondência e calcula a divergência de data.
+  Quando há múltiplas linhas no RESGATES para o mesmo processo, este passo garante que
+  a linha com o valor correto seja selecionada, evitando que uma linha com valor divergente
+  seja registrada quando existe uma correspondência exata.
+</p>
+<div class="nota">
+  O valor no RESGATES é negativo porque representa uma saída. O módulo compara
+  automaticamente o valor positivo do processo com o valor negativo do SAP.
+</div>
+
+<h3>3.2 Passo 2 — Número do processo com valor divergente no RESGATES</h3>
+<p>
+  Executado somente se o Passo 1 não encontrou nenhuma linha com valor exato.
+  A macro repete a busca pelo número do processo no campo Texto, mas desta vez aceita
+  qualquer linha que contenha o número — independentemente do valor financeiro.
+  O Retorno indicará a divergência de valor encontrada.
 </p>
 
-<h3>3.2 Estágio 2 — Busca no MOVIMENTO</h3>
+<h3>3.3 Passo 3 — Busca por valor no RESGATES</h3>
 <p>
-  Executado somente para processos não localizados no Estágio 1. A macro compara o valor financeiro
-  do MOVIMENTO com Valor Recuperado e Crédito Único (mesma prioridade do Passo 1b). Quando localizado,
-  o Retorno indica <em>Localizado — sem número de processo vinculado</em>, acrescido da divergência de
-  dias se houver.
+  Executado somente se os Passos 1 e 2 não localizaram o processo. A macro percorre
+  o RESGATES comparando o valor financeiro (coluna H) com o negativo do Valor Recuperado
+  e, na sequência, com o negativo do Crédito Único. Quando localizado por este critério,
+  o número do processo <strong>não</strong> está vinculado no texto do SAP, o que é refletido no Retorno.
 </p>
 
-<h3>3.3 Divergência de dias</h3>
+<h3>3.4 Passo 4 — Busca por valor no MOVIMENTO</h3>
+<p>
+  Executado somente para processos não localizados nos três passos anteriores. A macro compara
+  o valor financeiro do MOVIMENTO com o Valor Recuperado e, na sequência, com o Crédito Único
+  (valores positivos, pois no MOVIMENTO representam entradas). Quando localizado, o Retorno
+  indica que não há número de processo vinculado no texto do SAP.
+</p>
+
+<h3>3.5 Divergência de dias</h3>
 <p>
   Calculada em todos os casos de localização como a diferença absoluta em dias entre a
   Data do Crédito (coluna B do PROCESSOS) e a Data de documento (coluna D do SAP).
-  Se a Data do Crédito estiver em branco ou inválida, a divergência não é calculada
+  Se a Data do Crédito estiver em branco ou inválida, a divergência de dias não é calculada
   e o Retorno omite essa informação.
 </p>
 
-<h3>3.4 Possíveis valores do Retorno</h3>
+<h3>3.6 Divergência de valor</h3>
+<p>
+  Calculada nos Passos 1 e 2 quando o número do processo é encontrado mas o valor financeiro
+  da linha do RESGATES não coincide com o Valor Recuperado nem com o Crédito Único do processo.
+  Neste caso o valor localizado no SAP é exibido entre parênteses no Retorno.
+</p>
+
+<h3>3.7 Possíveis valores do Retorno</h3>
+<p>
+  O campo Retorno combina as informações disponíveis usando <code>-</code> para introduzir
+  a primeira observação e <code>+</code> para acrescentar observações adicionais.
+</p>
 
 <table>
   <thead><tr><th>Retorno</th><th>Significado</th></tr></thead>
   <tbody>
-    <tr><td>Localizado</td><td>Processo encontrado no RESGATES, datas iguais.</td></tr>
-    <tr><td>Localizado — divergência de N dias</td><td>Processo encontrado no RESGATES, mas com diferença de N dias entre as datas.</td></tr>
-    <tr><td>Localizado — sem número de processo vinculado</td><td>Encontrado no MOVIMENTO somente por valor, sem o número do processo no texto SAP. Datas iguais.</td></tr>
-    <tr><td>Localizado — sem número de processo vinculado, divergência de N dias</td><td>Encontrado no MOVIMENTO por valor, com diferença de N dias.</td></tr>
-    <tr><td>Não localizado</td><td>O processo não foi encontrado em nenhum dos dois relatórios.</td></tr>
+    <tr>
+      <td>Localizado</td>
+      <td>Encontrado no RESGATES pelo número do processo; datas e valor coincidentes.</td>
+    </tr>
+    <tr>
+      <td>Localizado - divergência de N dias</td>
+      <td>Encontrado no RESGATES pelo número do processo e valor exato; mas com diferença de N dias entre as datas.</td>
+    </tr>
+    <tr>
+      <td>Localizado - divergência de valor (X,XX)</td>
+      <td>Encontrado no RESGATES pelo número do processo; datas iguais, mas o valor no SAP é diferente do esperado.</td>
+    </tr>
+    <tr>
+      <td>Localizado - divergência de N dias + divergência de valor (X,XX)</td>
+      <td>Encontrado no RESGATES pelo número do processo; tanto a data quanto o valor diferem do esperado.</td>
+    </tr>
+    <tr>
+      <td>Localizado - sem número de processo vinculado</td>
+      <td>Encontrado apenas por valor (RESGATES ou MOVIMENTO); o número do processo não consta no campo Texto do SAP. Datas iguais.</td>
+    </tr>
+    <tr>
+      <td>Localizado - sem número de processo vinculado + divergência de N dias</td>
+      <td>Encontrado apenas por valor (RESGATES ou MOVIMENTO); número do processo não vinculado e datas divergentes.</td>
+    </tr>
+    <tr>
+      <td>Não localizado</td>
+      <td>O processo não foi encontrado em nenhum dos dois relatórios por nenhum critério.</td>
+    </tr>
   </tbody>
 </table>
 
@@ -275,7 +345,7 @@
   Este procedimento é feito <strong>uma única vez</strong> por arquivo.
 </p>
 <ol class="steps">
-  <li>Abra o arquivo Excel que contém as abas <strong>PROCESSOS</strong>, <strong>RESGATES</strong> e <strong>MOVIMENTO</strong>.</li>
+  <li>Abra o arquivo Excel que contém a aba <strong>PROCESSOS</strong>. As abas <strong>RESGATES</strong> e <strong>MOVIMENTO</strong> não precisam existir previamente.</li>
   <li>Pressione <strong>Alt + F11</strong> para abrir o Editor Visual Basic (VBE).</li>
   <li>No menu superior do VBE, clique em <strong>Arquivo → Importar Arquivo…</strong></li>
   <li>Localize e selecione o arquivo <code>RelatorioProcessos.bas</code> e clique em <strong>Abrir</strong>.</li>
@@ -298,8 +368,8 @@
   <strong>RESGATES</strong> e <strong>MOVIMENTO</strong> e, em seguida, executa a análise automaticamente.
 </p>
 <ol class="steps">
-  <li>Certifique-se de que as abas se chamam exatamente <strong>PROCESSOS</strong>, <strong>RESGATES</strong> e <strong>MOVIMENTO</strong>.</li>
-  <li>Cole os dados recebidos do VOIZA na aba <strong>PROCESSOS</strong> (a partir da linha 2, com cabeçalho na linha 1).</li>
+  <li>Baixe a planilha do <strong>VOIZA</strong>, abra-a no Excel e renomeie a aba para <strong>PROCESSOS</strong>.</li>
+  <li>Exclua as colunas extras, deixando apenas as colunas A a E conforme descrito na seção 2.1. As abas <strong>RESGATES</strong> e <strong>MOVIMENTO</strong> serão criadas automaticamente.</li>
   <li>Pressione <strong>Alt + F8</strong> para abrir a janela de macros.</li>
   <li>Selecione <strong>ImportarRelatorios</strong> na lista e clique em <strong>Executar</strong>.</li>
   <li>Na primeira janela, selecione o arquivo de <strong>RESGATES</strong> exportado do SAP e clique em <strong>Abrir</strong>.</li>
@@ -321,18 +391,18 @@
 <ol class="steps">
   <li>Pressione <strong>Alt + F8</strong> para abrir a janela de macros.</li>
   <li>Selecione <strong>AnalisarProcessos</strong> e clique em <strong>Executar</strong>.</li>
-  <li>As colunas F, G e H da aba PROCESSOS serão atualizadas com os resultados.</li>
+  <li>As colunas F a J da aba PROCESSOS serão atualizadas com os resultados.</li>
 </ol>
 
 <h3>5.3 LimparAnalise — limpar resultados</h3>
 <p>
-  Apaga o conteúdo das colunas F, G e H (Localizado em, Correspondência e Retorno) da aba PROCESSOS,
-  incluindo os cabeçalhos. Use para limpar os resultados antes de um reprocessamento manual.
+  Apaga o conteúdo das colunas F a J (Localizado em, Correspondência, Retorno, Texto e Valor)
+  da aba PROCESSOS, incluindo os cabeçalhos. Use para limpar os resultados antes de um reprocessamento manual.
 </p>
 <ol class="steps">
   <li>Pressione <strong>Alt + F8</strong> para abrir a janela de macros.</li>
   <li>Selecione <strong>LimparAnalise</strong> e clique em <strong>Executar</strong>.</li>
-  <li>As colunas F, G e H serão apagadas. Execute <strong>AnalisarProcessos</strong> para reprocessar.</li>
+  <li>As colunas F a J serão apagadas. Execute <strong>AnalisarProcessos</strong> para reprocessar.</li>
 </ol>
 
 <!-- 6. Exportação do SAP -->
@@ -347,7 +417,7 @@
 <ol class="steps">
   <li>Acesse a transação <strong>FBL3H</strong> no SAP.</li>
   <li>Configure os filtros desejados (conta específica para RESGATES; relatório geral para MOVIMENTO).</li>
-  <li>Aplique o layout <strong>/AGING</strong>: clique no ícone de layout (ou menu <em>Configurações → Layouts → Carregar</em>) e selecione <strong>/AGING</strong>.</li>
+  <li>Aplique o layout <strong>/AGING</strong>: localize o campo de layout na tela, preencha com <strong>/AGING</strong> e execute o relatório.</li>
   <li>Execute o relatório (<strong>F8</strong>).</li>
   <li>Clique com o <strong>botão direito</strong> sobre o relatório e selecione <em>Exportar como → Planilha eletrônica → Formato Microsoft Excel (*.xlsx)</em>.</li>
   <li>Salve o arquivo em um local de fácil acesso.</li>
@@ -386,18 +456,23 @@
       <td>Cole os dados recebidos do VOIZA na aba PROCESSOS a partir da linha 2.</td>
     </tr>
     <tr>
-      <td>O arquivo selecionado para 'RESGATES' não contém dados a partir da linha 2</td>
-      <td>O arquivo SAP selecionado para RESGATES está vazio ou só tem o cabeçalho.</td>
+      <td>O arquivo selecionado não contém dados a partir da linha 2</td>
+      <td>O arquivo SAP selecionado está vazio ou só tem o cabeçalho.</td>
       <td>Verifique se o arquivo exportado do SAP está correto.</td>
     </tr>
     <tr>
-      <td>O arquivo selecionado para 'MOVIMENTO' não contém dados a partir da linha 2</td>
-      <td>O arquivo SAP selecionado para MOVIMENTO está vazio ou só tem o cabeçalho.</td>
-      <td>Verifique se o arquivo exportado do SAP está correto.</td>
+      <td>Retorno: "divergência de valor (X,XX)"</td>
+      <td>O número do processo foi encontrado no RESGATES, mas o valor financeiro da linha não coincide com o Valor Recuperado nem com o Crédito Único.</td>
+      <td>Verifique se há outra linha no RESGATES com o valor correto. Confira também se os valores na aba PROCESSOS estão corretos.</td>
     </tr>
     <tr>
-      <td>Coluna Retorno com "Não localizado"</td>
-      <td>O processo não foi encontrado em RESGATES nem em MOVIMENTO, nem por número nem por valor.</td>
+      <td>Retorno: "sem número de processo vinculado"</td>
+      <td>O processo foi localizado apenas por valor — o número do processo não aparece no campo Texto do SAP.</td>
+      <td>Situação esperada para processos que não possuem o número vinculado na descrição do lançamento SAP.</td>
+    </tr>
+    <tr>
+      <td>Retorno: "Não localizado"</td>
+      <td>O processo não foi encontrado em RESGATES nem em MOVIMENTO por nenhum critério.</td>
       <td>Verifique se os relatórios SAP corretos foram importados e se os valores na aba PROCESSOS estão preenchidos.</td>
     </tr>
   </tbody>
@@ -407,11 +482,14 @@
 <h2>8. Fluxo Resumido de Uso</h2>
 <p>Siga este fluxo sempre que receber um novo chamado no VOIZA:</p>
 <ol class="steps">
-  <li>Abra o chamado no <strong>VOIZA</strong> e copie os dados de processos para a aba <strong>PROCESSOS</strong> (linha 1 = cabeçalho, dados a partir da linha 2).</li>
+  <li>Baixe a planilha do chamado no <strong>VOIZA</strong>, abra-a no Excel e renomeie a aba para <strong>PROCESSOS</strong>.</li>
+  <li>Exclua as colunas extras, mantendo apenas as colunas A a E conforme descrito na seção 2.1.</li>
   <li>Exporte os dois relatórios da transação <strong>FBL3H</strong> do SAP usando o layout <strong>/AGING</strong>: um para RESGATES e um para MOVIMENTO.</li>
   <li>No Excel, execute <strong>ImportarRelatorios</strong> e selecione os dois arquivos exportados quando solicitado.</li>
   <li>Os dados serão importados e a análise ocorrerá automaticamente.</li>
-  <li>Revise as linhas com <strong>Retorno = "Não localizado"</strong> na coluna H e verifique se os arquivos SAP importados estão corretos.</li>
+  <li>Revise as colunas H (Retorno), I (Texto) e J (Valor) na aba PROCESSOS para conferir os resultados.</li>
+  <li>Atenção especial para linhas com <strong>"Não localizado"</strong> — verifique se os arquivos SAP importados estão corretos.</li>
+  <li>Linhas com <strong>"divergência de valor"</strong> ou <strong>"sem número de processo vinculado"</strong> podem exigir verificação manual.</li>
   <li>Se necessário, corrija os dados e execute <strong>AnalisarProcessos</strong> para reprocessar sem reimportar.</li>
 </ol>
 
